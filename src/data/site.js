@@ -11,9 +11,8 @@ export const site = {
   lang: 'id', // Decision 3: UI language. Copy is Indonesian for now.
   description: 'Kawasan ruko dan hunian. Jelajahi kawasan, cluster, fasilitas, dan tipe unit dalam 360°.',
 
-  // Show small "contoh" badges on stand-in media and data so nobody mistakes
-  // placeholders for client-approved content. Turn off for launch.
-  showPlaceholderBadges: true,
+  // Small "contoh" badges on stand-in media and data. Off: the site is presented as live.
+  showPlaceholderBadges: false,
 
   hero: {
     // Decision 1 resolved: short video. The hero flows straight into the

@@ -7,9 +7,9 @@
 //
 // Plain scene: starts at data-start and scrubs one full orbit over its range.
 //
-// Hotspots: opening one (marker or list) zooms the aerial view into the marker,
-// fades to the location's own view and shows its info in place of the panel.
-// Back, Esc, or scrolling on flies back out to the orbit.
+// Hotspots: opening one (marker or list) fast-forwards the orbit to the
+// hotspot's default angle while zooming in on it, with its info in place of the
+// panel. Back, Esc, or scrolling on turns and zooms back out to the orbit.
 //
 // Scenes that share a frame folder share one download (see frameSet).
 
@@ -51,6 +51,21 @@ function frameSet(base) {
           img.src = base + m.pattern.replace('{size}', size).replace('{n}', String(i).padStart(3, '0'));
         };
         for (let k = 0; k < 6; k++) loadOne();
+        // Sharp versions of the frames the camera rests on when zoomed in (optional).
+        set.detail = new Map();
+        set.loadDetail = () => {
+          if (set.detailRequested || !m.detail) return;
+          set.detailRequested = true;
+          for (const f of m.detail.frames) {
+            const img = new Image();
+            img.decoding = 'async';
+            img.onload = () => {
+              set.detail.set(f, img);
+              listeners.forEach((fn) => fn());
+            };
+            img.src = base + m.detail.pattern.replace('{n}', String(f).padStart(3, '0'));
+          }
+        };
         return set;
       }),
     nearest(i) {
@@ -69,38 +84,6 @@ function frameSet(base) {
   return set;
 }
 
-// Smooth zoom-and-pan between two cameras [cx, cy, w] (van Wijk & Nuij, "Smooth
-// and efficient zooming and panning", 2003; the same path d3.interpolateZoom
-// uses): it pulls back while travelling, so long moves read as flying over the
-// area rather than sliding across it. Returns t(0..1) -> camera, plus a
-// suggested duration in ms.
-function zoomPath([ux0, uy0, w0], [ux1, uy1, w1]) {
-  const rho = Math.SQRT2;
-  const dx = ux1 - ux0;
-  const dy = uy1 - uy0;
-  const d2 = dx * dx + dy * dy;
-  let S, path;
-  if (d2 < 1e-12) {
-    S = Math.log(w1 / w0) / rho;
-    path = (t) => [ux0 + t * dx, uy0 + t * dy, w0 * Math.exp(rho * t * S)];
-  } else {
-    const d1 = Math.sqrt(d2);
-    const b0 = (w1 * w1 - w0 * w0 + 4 * d2) / (2 * w0 * 2 * d1);
-    const b1 = (w1 * w1 - w0 * w0 - 4 * d2) / (2 * w1 * 2 * d1);
-    const r0 = Math.log(Math.sqrt(b0 * b0 + 1) - b0);
-    const r1 = Math.log(Math.sqrt(b1 * b1 + 1) - b1);
-    S = (r1 - r0) / rho;
-    path = (t) => {
-      const sT = t * S;
-      const coshr0 = Math.cosh(r0);
-      const u = (w0 / (2 * d1)) * (coshr0 * Math.tanh(rho * sT + r0) - Math.sinh(r0));
-      return [ux0 + u * dx, uy0 + u * dy, (w0 * coshr0) / Math.cosh(rho * sT + r0)];
-    };
-  }
-  path.duration = Math.abs(S) * 1000;
-  return path;
-}
-
 // ---- one scene
 async function init(root) {
   const stage = root.querySelector('.scene__stage');
@@ -114,11 +97,9 @@ async function init(root) {
 
   const keys = Object.keys(spots);
   const place = {
-    imgs: [...root.querySelectorAll('.scene__place-img')],
     panel: root.querySelector('.scene__loc'),
     title: root.querySelector('.scene__loc-title'),
     text: root.querySelector('.scene__loc-text'),
-    count: root.querySelector('[data-loc-count]'),
   };
 
   root.addEventListener('click', (e) => {
@@ -159,6 +140,7 @@ async function init(root) {
   let current = offset; // smoothed frame position (float, unwrapped)
   let drawn = -1;
   let shownIndex = 0; // frame index currently on the canvas
+  let override = null; // frame (float) set by a hotspot move instead of the scroll
   let ticking = false;
 
   // ---- layout
@@ -201,10 +183,32 @@ async function init(root) {
     return r.bottom > -50 && r.top < window.innerHeight + 50;
   };
 
+  // Put frame f (float, unwrapped) on the canvas; returns its index.
+  function showFrame(f) {
+    const index = ((Math.round(f) % N) + N) % N;
+    shownIndex = index;
+    if (index !== drawn && draw(index)) {
+      drawn = index;
+      root.classList.add('is-scrub');
+    }
+    const d = Math.round((index / N) * 360);
+    deg.textContent = `${d}°`;
+    root.style.setProperty('--deg', `${d}deg`);
+    return index;
+  }
+
+  // Draw a frame through the camera. The zoom happens here, from the source image,
+  // so zoomed views keep the source's resolution (a CSS zoom would enlarge the
+  // screen-sized canvas instead). While zoomed, a detail frame is used if there is one.
   function draw(index) {
-    const img = set.frames[index] || set.nearest(index);
+    const img = (cam && set.detail?.get(index)) || set.frames[index] || set.nearest(index);
     if (!img) return false;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const k = cam ? W / cam[2] : 1;
+    const tx = cam ? W / 2 - cam[0] * k : 0;
+    const ty = cam ? H / 2 - cam[1] * k : 0;
+    ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * tx, dpr * ty);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(img, ox, oy, m.width * scale, m.height * scale);
     return true;
   }
@@ -226,20 +230,18 @@ async function init(root) {
     }
   }
 
-  // ---- fly to a location
-  // A camera over the aerial canvas: [cx, cy, w] = the point at the centre of the
-  // screen and the visible width, in stage pixels ([W/2, H/2, W] is the plain
-  // orbit). Every move is ONE continuous zoom on one easing curve:
-  //   open   orbit -> zoom in on the hotspot, its view fading in over the aerial
-  //   step   zoom out from this location to the whole area, then in to the next
-  //   close  zoom out from the location back to the orbit
-  // Location views zoom in step with the camera (between 1 and 1 + VIEW_ZOOM, so
-  // their edges never show), so the photo and the aerial move as one.
-  const ZOOM = 2.6; // how close the camera gets on a location
-  const VIEW_ZOOM = 0.12;
+  // ---- go to a location
+  // Each hotspot has a default angle (`frame` in the scene). Opening it
+  // fast-forwards the orbit to that angle, the real camera path turning, while a
+  // camera over the canvas moves in and zooms onto the hotspot, following it
+  // frame by frame as it moves across the turning view. Moving to another
+  // hotspot turns the orbit to its angle while the camera pulls back a little and
+  // follows across; closing turns back to the scroll position while zooming out.
+  // The camera is [cx, cy, w]: the point at the screen centre and the visible
+  // width, in stage pixels ([W/2, H/2, W] = the plain orbit).
+  const ZOOM = 2.2; // how close the camera gets on a location
   let placeKey = null; // open hotspot, or null while orbiting
   let placeY = 0; // scroll position when it opened
-  let cur = 0; // index of the view image showing the open location
   let cam = null; // null = untouched orbit
   let run = 0; // id of the running move; starting a new one cancels it
   let flyTimer = 0;
@@ -247,37 +249,36 @@ async function init(root) {
   const flying = () => {
     root.classList.add('is-flying');
     clearTimeout(flyTimer);
-    flyTimer = setTimeout(() => root.classList.remove('is-flying'), 2600);
+    flyTimer = setTimeout(() => root.classList.remove('is-flying'), 3000);
   };
 
+  const wrap = (i) => ((i % N) + N) % N;
+  const shortest = (a, b) => {
+    const d = wrap(b - a);
+    return d > N / 2 ? d - N : d;
+  };
   const overview = () => [W / 2, H / 2, W];
   const clampCam = ([x, y, w]) => {
     const h = (w * H) / W;
     return [clamp(x, w / 2, W - w / 2), clamp(y, h / 2, H - h / 2), w];
   };
-  // Where a hotspot is on the frame now on screen (centre if not in this frame).
+  // A hotspot's position on the stage at a given frame (null if not in it).
+  const posAt = (key, index) => {
+    const p = m.hotspots[spots[key].track]?.[index];
+    return p ? [ox + p[0] * scale, oy + p[1] * scale] : null;
+  };
   const spotCam = (key) => {
-    const p = m.hotspots[spots[key].track]?.[shownIndex];
-    return clampCam(p ? [ox + p[0] * scale, oy + p[1] * scale, W / ZOOM] : [W / 2, H / 2, W / ZOOM]);
+    const p = posAt(key, shownIndex) || [W / 2, H / 2];
+    return clampCam([p[0], p[1], W / ZOOM]);
   };
 
+  // Set the camera and redraw the frame on screen through it.
   const applyCam = (c) => {
     cam = c;
-    if (!c) {
-      canvas.style.transform = '';
-      return;
-    }
-    const k = W / c[2];
-    canvas.style.transformOrigin = '0 0';
-    canvas.style.transform = `translate(${(W / 2 - c[0] * k).toFixed(2)}px, ${(H / 2 - c[1] * k).toFixed(2)}px) scale(${k.toFixed(4)})`;
-  };
-  const setImg = (img, opacity, zoom) => {
-    img.style.opacity = opacity.toFixed(3);
-    img.style.transform = `scale(${zoom.toFixed(4)})`;
+    if (draw(shownIndex)) drawn = shownIndex;
   };
 
   const ease = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
-  const smooth = (k) => k * k * (3 - 2 * k);
   const lerp = (a, b, t) => a + (b - a) * t;
   // Run fn(0..1) over ms; resolves false if another move took over.
   const tween = (id, ms, fn) =>
@@ -292,39 +293,43 @@ async function init(root) {
       requestAnimationFrame(frame);
     });
 
-  // The move itself. Zoom runs in log scale so it feels even; a step between two
-  // locations dips to the whole-area view half way (cosine, so the turn-around
-  // is smooth rather than a stop). `out`/`into` are the view images leaving and
-  // arriving; each grows as the camera closes in on it and shrinks as it pulls out.
-  function move(id, to, { out = null, into = null, ms }) {
-    const from = cam || overview();
-    const l0 = Math.log(W / from[2]);
-    const l1 = Math.log(W / to[2]);
-    const via = out && into;
-    return tween(id, ms, (t) => {
+  // One move: turn the orbit from where it is to `toFrame` while the camera goes
+  // from wherever it is (following `fromKey` if leaving a hotspot) to `toKey`
+  // (or back to the plain orbit when there is none).
+  function travel(id, { fromKey = null, toKey = null, toFrame }) {
+    const c0 = cam || overview();
+    const l0 = Math.log(W / c0[2]);
+    const l1 = toKey ? Math.log(ZOOM) : 0;
+    const f0 = override ?? current;
+    const d = shortest(f0, toFrame);
+    const ms = clamp(1300 + Math.abs(d) * 16, 1300, 2600);
+    let lastA = null;
+    let lastB = null;
+    const done = tween(id, ms, (t) => {
       const e = ease(t);
-      const dip = via ? (1 + Math.cos(2 * Math.PI * t)) / 2 : 1;
-      const ls = lerp(l0, l1, e) * dip;
-      applyCam(clampCam([lerp(from[0], to[0], e), lerp(from[1], to[1], e), W / Math.exp(ls)]));
-      if (out) setImg(out, 1 - smooth(clamp(t / 0.35, 0, 1)), 1 + VIEW_ZOOM * clamp(ls / l0, 0, 1));
-      if (into) setImg(into, smooth(clamp((t - 0.62) / 0.38, 0, 1)), 1 + VIEW_ZOOM * clamp(ls / l1, 0, 1));
+      override = f0 + d * e; // the scroll no longer decides the angle until closed
+      const index = ((Math.round(override) % N) + N) % N;
+      const a = fromKey ? (lastA = posAt(fromKey, index) || lastA) : null;
+      const b = toKey ? (lastB = posAt(toKey, index) || lastB) : null;
+      const start = a || [c0[0], c0[1]];
+      const end = b || [W / 2, H / 2];
+      // Going in: travel leads, zoom follows. Between hotspots: zoom dips half way.
+      const pan = toKey && !fromKey ? ease(clamp(t / 0.8, 0, 1)) : e;
+      let ls;
+      if (fromKey && toKey) ls = lerp(l0, l1, e) - 0.55 * Math.log(ZOOM) * Math.sin(Math.PI * t);
+      else if (toKey) ls = lerp(l0, l1, ease(clamp((t - 0.15) / 0.85, 0, 1)));
+      else ls = lerp(l0, l1, e);
+      cam = clampCam([lerp(start[0], end[0], pan), lerp(start[1], end[1], pan), W / Math.exp(Math.max(0, ls))]);
+      drawn = -1; // camera moved: redraw even if the frame is the same
+      showFrame(override);
     });
+    return { done, ms };
   }
-
-  // Load a location's view into an image; resolves once decoded (cached views are instant).
-  const loadView = (img, key) => {
-    if (img.dataset.key !== key) {
-      img.dataset.key = key;
-      img.src = spots[key].view;
-    }
-    return (img.decode ? img.decode() : Promise.resolve()).catch(() => {});
-  };
 
   const fillPanel = (key) => {
     const c = spots[key];
     place.title.textContent = c.title;
     place.text.textContent = c.text;
-    place.count.textContent = `${keys.indexOf(key) + 1}/${keys.length}`;
   };
   const showPanel = (key) => {
     fillPanel(key);
@@ -334,6 +339,7 @@ async function init(root) {
 
   async function openPlace(key) {
     if (mode !== 'scrub' || !spots[key] || key === placeKey) return;
+    set.loadDetail?.();
     const id = ++run;
     const from = placeKey;
     placeKey = key;
@@ -341,18 +347,10 @@ async function init(root) {
     place.panel.hidden = true;
     flying();
     root.classList.add('is-place');
-    const out = from ? place.imgs[cur] : null;
-    const into = place.imgs[from ? 1 - cur : cur];
-    await loadView(into, key);
-    if (id !== run) return;
-    const to = spotCam(key);
-    const ms = from ? 2200 : 1500;
-    // Panel comes in as the view settles.
-    const panelAt = setTimeout(() => id === run && showPanel(key), ms * 0.8);
-    const done = await move(id, to, { out, into, ms });
-    if (!done) return clearTimeout(panelAt);
-    if (out) setImg(out, 0, 1);
-    cur = place.imgs.indexOf(into);
+    const toFrame = spots[key].frame ?? shownIndex;
+    const { done, ms } = travel(id, { fromKey: from, toKey: key, toFrame });
+    const panelAt = setTimeout(() => id === run && showPanel(key), ms * 0.75);
+    if (!(await done)) clearTimeout(panelAt);
   }
 
   async function closePlace() {
@@ -365,13 +363,13 @@ async function init(root) {
     if (root.contains(document.activeElement) || document.activeElement === document.body) {
       root.querySelector(`[data-spot-open="${key}"]`)?.focus({ preventScroll: true });
     }
-    const out = place.imgs[cur];
-    // Orbit UI fades back in while the camera pulls out.
+    // Turn back to the angle the scroll position calls for.
+    const { done } = travel(id, { fromKey: key, toFrame: Math.round(current) });
     setTimeout(() => id === run && root.classList.remove('is-place'), 500);
-    if (!(await move(id, overview(), { out, ms: 1300 }))) return;
+    if (!(await done)) return;
+    override = null;
     root.classList.remove('is-place');
     applyCam(null);
-    place.imgs.forEach((img) => setImg(img, 0, 1));
   }
 
   const stepPlace = (d) => {
@@ -382,13 +380,6 @@ async function init(root) {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && placeKey && !document.querySelector('dialog[open]')) closePlace();
   });
-
-  // Warm the cache for the location views.
-  for (const v of new Set(Object.values(spots).map((c) => c.view))) {
-    const img = new Image();
-    img.src = v;
-    img.decode?.().catch(() => {});
-  }
 
   function tick() {
     ticking = false;
@@ -430,17 +421,8 @@ async function init(root) {
     current = reduced ? target : current + (target - current) * 0.16;
     if (Math.abs(target - current) < 0.02) current = target;
 
-    const index = ((Math.round(current) % N) + N) % N;
-    shownIndex = index;
-    if (index !== drawn && draw(index)) {
-      drawn = index;
-      root.classList.add('is-scrub');
-    }
+    const index = showFrame(override ?? current);
     placeMarkers(index, areaIn > 0.3);
-
-    const d = Math.round((index / N) * 360);
-    deg.textContent = `${d}°`;
-    root.style.setProperty('--deg', `${d}deg`);
 
     if (current !== target) requestTick();
   }
@@ -458,6 +440,9 @@ async function init(root) {
       requestTick();
     }
   });
+  // Detail frames are only needed once someone heads for a hotspot.
+  root.addEventListener('pointerover', (e) => e.target.closest('[data-spot], [data-spot-open]') && set.loadDetail?.(), { passive: true });
+  root.addEventListener('focusin', (e) => e.target.closest('[data-spot-open]') && set.loadDetail?.());
   window.addEventListener('scroll', requestTick, { passive: true });
   window.addEventListener('resize', resize);
   resize();

@@ -1,19 +1,16 @@
 ---
-// Section heading styled as a drawing-sheet title block: number, title, intro.
+// Section heading: title and intro.
 interface Props {
   id?: string;
-  no: string;
-  kicker: string;
   title: string;
   intro?: string;
 }
 
-const { id, no, kicker, title, intro } = Astro.props;
+const { id, title, intro } = Astro.props;
 ---
 
 <div class="sheet" data-reveal>
   <div>
-    <p class="sheet__no eyebrow">{no} — {kicker}</p>
     <h2 class="sheet__title display" id={id}>{title}</h2>
   </div>
   {intro && <p class="sheet__intro">{intro}</p>}

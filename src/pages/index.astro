@@ -18,8 +18,6 @@ import { site, url } from '../data/site.js';
     <!-- 1. Hero + 2. Area: one pinned scene; the hero video hands off to the scroll scrub -->
     <ScrollScene
       id="kawasan"
-      no="01"
-      kicker="Kawasan 360°"
       title={area.title}
       intro={area.intro}
       scene={area.scene}
@@ -30,7 +28,7 @@ import { site, url } from '../data/site.js';
     <!-- 3. Area map (static, no interaction) -->
     <section id="peta" class="map" aria-labelledby="peta-title">
       <div class="wrap">
-        <SheetHeader id="peta-title" no="02" kicker="Peta" title={areaMap.title} intro={areaMap.intro} />
+        <SheetHeader id="peta-title" title={areaMap.title} intro={areaMap.intro} />
         <figure class="map__figure" data-reveal>
           <img
             src={url(areaMap.image)}
@@ -47,8 +45,6 @@ import { site, url } from '../data/site.js';
     <!-- 4. Cluster: scroll scene like Kawasan -->
     <ScrollScene
       id="cluster"
-      no="03"
-      kicker="Cluster 360°"
       title={cluster.title}
       intro={cluster.intro}
       scene={cluster.scene}

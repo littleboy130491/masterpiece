@@ -130,22 +130,6 @@ button {
   padding-block: clamp(56px, 9vw, 120px) clamp(28px, 4vw, 48px);
 }
 
-.sheet__no {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: var(--accent);
-  margin-bottom: 18px;
-}
-
-.sheet__no::after {
-  content: '';
-  height: 1px;
-  width: 64px;
-  background: currentColor;
-  opacity: 0.6;
-}
-
 .sheet__title {
   margin: 0;
   font-size: clamp(48px, 8vw, 112px);

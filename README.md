@@ -28,16 +28,16 @@ malinowskiego.com (`src/components/ScrollScene.astro`, `src/scripts/scroll-scene
 orbit over its scroll length (`--range`: 400vh on desktop, 300vh on phones), with hotspot markers pinned to
 landmarks, a list of the same hotspots, and a degree meter.
 
-**Opening a hotspot zooms you into that location.** A camera moves over the aerial frame, and every move is one
-continuous zoom on a single easing curve (`move` in `src/scripts/scroll-scene.js`):
-1. Open: the camera zooms in on the hotspot while that location's own view (`view` in `src/data/area.js`) fades in
-   over the aerial and grows with it. Its title and text replace the section panel.
-2. Previous/next or another list item: the camera zooms out from the current location to the whole area, then
-   straight back in to the next one, with no stop in between. The current view shrinks and fades as the camera
-   pulls out, and the next grows and fades in as it closes in. Views stay at 100–112% of the screen, so their
-   edges never show. Views are decoded before a move starts, so nothing stalls mid-way. A hotspot outside the
-   current frame gets a zoom toward its side of the frame.
-3. Back, Esc, or scrolling on (more than 120px) zooms back out to the orbit.
+**Opening a hotspot takes you there along the real camera path.** Each hotspot has a default angle (`frame` in
+`src/data/area.js`: a frame of the orbit where it sits well in view). A camera over the canvas follows the hotspot
+using its tracked position in every frame (`travel` in `src/scripts/scroll-scene.js`):
+1. Open: the orbit fast-forwards to the hotspot's angle, the shorter way round, while the camera moves in and zooms
+   to 2.2× on it. The direction changes during the move because it's the rendered camera path turning, so there
+   is real parallax. Its title and text replace the section panel.
+2. Previous/next or another list item: the orbit turns from this hotspot's angle to the next one's while the
+   camera pulls back half way (to about 1.4×) and follows across, then closes in.
+3. Back, Esc, or scrolling on (more than 120px) turns the orbit back to the angle the scroll position calls for,
+   zooming out on the way. Scrolling drives the orbit again afterwards.
 
 The side-panel flyout is no longer used here.
 
@@ -64,6 +64,10 @@ and WebRotate can neither drive a full-bleed, cover-fit view (it won't upscale p
 page scroll. As a result the homepage has no WebRotate viewer.
 
 ## Where content lives
+
+Content lives in `src/data/` for now. The planned CMS structure (every editable field, its type and validation, and
+how it maps to these files) is in [`docs/CMS-CONTENT-MODEL.md`](docs/CMS-CONTENT-MODEL.md). Annotated screenshots showing where
+each field appears on the page are in [`docs/CMS-FIELD-MAP.md`](docs/CMS-FIELD-MAP.md).
 
 | File | Controls |
 | --- | --- |
@@ -131,6 +135,15 @@ Each type's `vr.url` opens in the overlay as an iframe, with an "open in new tab
 | `assets/images_ruko` (Ruko Hook 01, 601 frames) | Tipe 1 facade turntable (every 5th frame, cropped to 760×570). Type card and gallery stills. |
 | drawn | Placeholder area map, siteplan and denah (SVG) |
 
+**Sharp zoomed views (detail frames).** When a hotspot is open, the camera zooms about 2.2× into the frame, which
+is far beyond the 1280×720 renders. `assets/hires/x4/` holds AI-upscaled (Real-ESRGAN x4plus, 5120×2880) versions of
+the frames at each hotspot's default angle (render frames 15, 150, 405 and 555). The build turns them into 3840px
+`detail/` frames, colour-matched to the originals, and the scene draws them while zoomed in. They only download once
+someone hovers over or opens a hotspot. If a hotspot's `frame` changes, upscale that render frame too
+(frame × 5). An optional `assets/hires/x2/` set, every 5th frame at 2560×1440, would sharpen the scroll frames the
+same way. The zoom is drawn inside the canvas from the source image, not as a CSS zoom, so sharper sources show
+directly. `assets/images_bev_kawasan_rescale/` is a plain 4× resize with no added detail, so it isn't used.
+
 `scripts/track-hotspots.mjs` follows four landmarks (plaza, commercial building, office towers, lakeside
 pavilion) through all 600 area frames with block matching. That keeps the placeholder hotspots pinned to real
 buildings as the view rotates. Output goes to `scripts/data/kawasan-tracks.json`.
@@ -142,9 +155,6 @@ Everything below shows a striped "contoh" badge on the page while `site.showPlac
 - **Project name:** "DR" / "DR Residence", taken from the sketch file name.
 - **Hero film:** the aerial render orbit, not a produced film.
 - **Cluster sequence:** reuses the Kawasan frames.
-- **Location views** (the background a hotspot flies to): close, upscaled crops of the aerial renders
-  (`media/locations/`, built by `buildLocations`). Replace them with a proper view per location, ideally 1920px+
-  16:9 eye-level or close renders, then set `viewsPlaceholder: false`.
 - **Type sequences and parts:** every type uses the Tipe 1 facade orbit; the part keyframes are evenly spaced angles and the part text is sample copy.
 - **Tipe 2–6:** images and turntables reuse Tipe 1 material. All type specs (LT, LB, bedrooms, bathrooms) are sample numbers.
 - **Area map, siteplan, denah:** drawn stand-ins.

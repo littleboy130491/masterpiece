@@ -48,9 +48,6 @@ const facts = [
       <section class="viewer" aria-labelledby="part-title" style={`--ratio: ${t.sequence.width / t.sequence.height}`}>
         <div class="viewer__head">
           <div>
-            <p class="eyebrow viewer__no">
-              <span data-part-no>01</span> — <span data-part-kind>{parts[0].kind}</span>
-            </p>
             <h2 class="display viewer__title" id="part-title" data-part-name>{parts[0].name}</h2>
           </div>
           <nav class="viewer__dots" aria-label="Bagian">
@@ -87,10 +84,6 @@ const facts = [
 
     <aside class="tp__panel" aria-label={`Informasi ${t.name}`}>
       <div class="panel">
-        <p class="eyebrow panel__kicker">
-          Tipe unit
-          {site.showPlaceholderBadges && t.placeholder && <span class="badge">Data contoh</span>}
-        </p>
         <h1 class="display panel__name">{t.name}</h1>
         {t.label && <p class="panel__label eyebrow">{t.label}</p>}
 
@@ -130,8 +123,7 @@ const facts = [
         </nav>
 
         <div class="panel__denah">
-          <p class="eyebrow">Denah</p>
-          <ul>
+          <ul aria-label="Denah">
             {
               t.denah.map((d, i) => (
                 <li>
@@ -218,10 +210,6 @@ const facts = [
     gap: 24px;
   }
 
-  .viewer__no {
-    margin: 0 0 6px;
-    color: var(--accent);
-  }
 
   .viewer__title {
     margin: 0;
@@ -261,10 +249,6 @@ const facts = [
   .viewer__stage :global(.tt) {
     color: var(--ink);
     margin-inline: 0;
-  }
-
-  .viewer__stage :global(.tt__hint) {
-    color: var(--muted);
   }
 
   .viewer__stage :global(.tt__step:hover) {
@@ -325,13 +309,6 @@ const facts = [
     scrollbar-width: thin;
   }
 
-  .panel__kicker {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 0 0 8px;
-    color: var(--muted);
-  }
 
   .panel__name {
     margin: 0;
@@ -432,11 +409,6 @@ const facts = [
     background: var(--ink);
     border-color: var(--ink);
     color: var(--paper);
-  }
-
-  .panel__denah p {
-    margin: 0 0 10px;
-    color: var(--muted);
   }
 
   .panel__denah ul {
@@ -600,8 +572,6 @@ const facts = [
   const parts = JSON.parse(track.dataset.parts);
   const tt = track.querySelector('[data-turntable]');
   const $ = (sel) => [...document.querySelectorAll(sel)];
-  const no = track.querySelector('[data-part-no]');
-  const kind = track.querySelector('[data-part-kind]');
   const name = track.querySelector('[data-part-name]');
   const text = track.querySelector('[data-part-text]');
   let active = 0;
@@ -612,8 +582,6 @@ const facts = [
     const p = parts[i];
     tt.dataset.goto = String(p.frame); // picked up if the viewer is still starting
     tt.dispatchEvent(new CustomEvent('tt:goto', { detail: { frame: p.frame } }));
-    no.textContent = String(i + 1).padStart(2, '0');
-    kind.textContent = p.kind;
     name.textContent = p.name;
     text.textContent = p.text;
     for (const el of [name, text]) {

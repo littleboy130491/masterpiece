@@ -7,37 +7,35 @@
 // showing, and the hero text gives way to the section panel without a break.
 // Without `hero`, the panel and markers show from the start.
 //
-// Opening a hotspot (marker or list) flies the view into that point and fades to
-// the location's own view, with its info in place of the section panel. Back,
-// Esc, or scrolling on returns to the orbit.
+// Opening a hotspot (marker or list) fast-forwards the orbit to the hotspot's
+// default angle while zooming in on it, with its info in place of the section
+// panel. Back, Esc, or scrolling on returns to the orbit.
 //
 // Logic in src/scripts/scroll-scene.js.
 import { site, url } from '../data/site.js';
 
 interface Hotspot {
   track: string;
+  frame?: number; // default angle: frame of the scene to turn to when opened
   title: string;
   short?: string;
   text: string;
-  view: string;
 }
 
 interface Props {
   id: string;
-  no: string;
-  kicker: string;
   title: string;
   intro: string;
-  scene: { base: string; startFrame?: number; placeholder?: boolean; viewsPlaceholder?: boolean };
+  scene: { base: string; startFrame?: number; placeholder?: boolean };
   hotspots: Record<string, Hotspot>;
   hero?: { eyebrow: string; title: string; teaser: string; full: string; cover: string };
 }
 
-const { id, no, kicker, title, intro, scene, hotspots, hero } = Astro.props;
+const { id, title, intro, scene, hotspots, hero } = Astro.props;
 const spots = Object.entries(hotspots).map(([key, h]) => ({
   key,
   short: h.short || h.title,
-  content: { track: h.track, title: h.title, text: h.text, view: url(h.view) },
+  content: { track: h.track, frame: h.frame, title: h.title, text: h.text },
 }));
 const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fullName });
 ---
@@ -68,10 +66,6 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
       )
     }
     <canvas class="scene__media scene__canvas" aria-hidden="true"></canvas>
-    <div class="scene__media scene__place" aria-hidden="true">
-      <img class="scene__place-img" alt="" />
-      <img class="scene__place-img" alt="" />
-    </div>
     <div class="scene__shade" aria-hidden="true"></div>
 
     <div class="scene__markers">
@@ -116,7 +110,6 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
     }
 
     <div class="scene__area wrap" data-phase="area">
-      <p class="eyebrow scene__no">{no} — {kicker}</p>
       <h2 class="display scene__area-title" id={`${id}-title`}>{title}</h2>
       <p class="scene__intro">{intro}</p>
       <ol class="scene__list">
@@ -141,10 +134,6 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
         </svg>
         Kembali ke {title.toLowerCase()}
       </button>
-      <p class="eyebrow scene__loc-no">
-        {no} — {title} · <span data-loc-count></span>
-        {site.showPlaceholderBadges && scene.viewsPlaceholder && <span class="badge">Gambar contoh</span>}
-      </p>
       <h3 class="display scene__loc-title" id={`${id}-loc-title`} tabindex="-1"></h3>
       <p class="scene__loc-text"></p>
       <div class="scene__loc-nav">
@@ -221,26 +210,8 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
     opacity: 1;
   }
 
-  /* ---- fly to a location
-     The camera (canvas transform) and each view image's opacity and zoom are
-     driven by scroll-scene.js as one continuous move; only resting states here. */
-  .scene__place {
-    pointer-events: none;
-  }
-
-  .scene__canvas {
-    will-change: transform;
-  }
-
-  .scene__place-img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    will-change: opacity, transform;
-  }
+  /* ---- go to a location: the camera is drawn inside the canvas by
+     scroll-scene.js, so nothing to style here. */
 
   /* Orbit UI steps aside while a location is open. */
   .scene.is-flying [data-phase],
@@ -411,10 +382,6 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
     max-width: 460px;
   }
 
-  .scene__no {
-    margin: 0 0 12px;
-    color: #f0c9a4;
-  }
 
   .scene__area-title {
     margin: 0 0 12px;
@@ -551,14 +518,6 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
     color: var(--ink);
   }
 
-  .scene__loc-no {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    margin: 0 0 12px;
-    color: #f0c9a4;
-  }
 
   .scene__loc-title {
     margin: 0 0 14px;

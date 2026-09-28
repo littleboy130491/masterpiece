@@ -10,8 +10,6 @@ import { site, url } from '../../data/site.js';
   <div class="wrap">
     <SheetHeader
       id="fasilitas-title"
-      no="04"
-      kicker="Fasilitas"
       title="Ruang bersama"
       intro="Fasilitas yang melengkapi kawasan, dari tepi danau hingga pusat komersial."
     />
@@ -28,7 +26,6 @@ import { site, url } from '../../data/site.js';
                 {site.showPlaceholderBadges && i === 0 && <span class="badge fac__badge">Gambar contoh</span>}
               </div>
               <figcaption>
-                <span class="fac__no eyebrow">{String(i + 1).padStart(2, '0')}</span>
                 {f.title}
               </figcaption>
             </figure>
@@ -116,10 +113,6 @@ import { site, url } from '../../data/site.js';
     line-height: 1.15;
   }
 
-  .fac__no {
-    font-family: var(--sans);
-    color: var(--accent);
-  }
 
   .fac__controls {
     display: flex;

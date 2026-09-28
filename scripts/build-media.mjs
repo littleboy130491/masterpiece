@@ -8,7 +8,6 @@
 //   public/media/tipe-1/      facade turntable for Tipe 1 (Ruko Hook 01 renders)
 //   public/media/hero/        teaser loop, full film, cover still
 //   public/media/stills/      stills cropped from the renders (facilities, type cards, gallery)
-//   public/media/locations/   placeholder location views for scroll-scene hotspots
 //   public/media/placeholder/ drawn stand-ins for the area map, siteplan and floor plans
 //
 // Hotspot positions come from scripts/data/kawasan-tracks.json (see track-hotspots.mjs).
@@ -26,6 +25,11 @@ const FORCE = process.argv.includes('--force');
 const OUT = 'public/media';
 
 const KAWASAN = { dir: 'assets/images_bev_kawasan', prefix: 'BEV Kawasan Ruko_', count: 600 };
+// Optional AI-upscaled renders (same file names). x2: every 5th frame at 2560x1440,
+// used for the scroll frames; x4: a few frames at 5120x2880, used for the zoomed
+// "detail" frames at each hotspot's default angle. Missing files fall back to KAWASAN.
+const KAWASAN_X2 = { ...KAWASAN, dir: 'assets/hires/x2' };
+const KAWASAN_X4 = { ...KAWASAN, dir: 'assets/hires/x4' };
 const RUKO = { dir: 'assets/images_ruko', prefix: 'Ruko Hook 01_', count: 600 }; // frame 600 repeats frame 0
 
 const src = (seq, i) => path.join(seq.dir, `${seq.prefix}${String(i).padStart(5, '0')}.jpg`);
@@ -95,27 +99,57 @@ const tracks = JSON.parse(await readFile('scripts/data/kawasan-tracks.json', 'ut
 // hotspot positions keyed by landmark (from scripts/data/kawasan-tracks.json).
 // Kawasan: every 5th render frame -> 120 frames (3° per frame). Its hero video is
 // the same orbit, so the manifest also records how video frames map to scene frames.
-const SCROLL = { step: 5, sizes: { lg: [1280, 60], sm: [800, 62] } };
+const SCROLL = { step: 5, sizes: { lg: [1920, 58], sm: [800, 62] } };
+const DETAIL = { width: 3840, quality: 62 };
 // teaser.mp4: the orbit slowed 2x with motion-interpolated in-between frames, so
 // video frame k = render frame k * 0.5; at 30 fps one orbit takes 40 s.
 const HERO_VIDEO = { step: 0.5, fps: 30 };
 
-async function buildScrollScene(name, seq, { tracks: trackPoints = {}, video } = {}) {
+async function buildScrollScene(name, seq, { tracks: trackPoints = {}, video, hires = {}, detailFrames = [] } = {}) {
   const dir = `${OUT}/scroll/${name}`;
   if (!(await fresh(dir))) return;
   const count = seq.count / SCROLL.step;
+  // Best available source per frame: the upscaled one if present, else the render.
+  const best = (i) => (hires.x2 && existsSync(src(hires.x2, i)) ? src(hires.x2, i) : src(seq, i));
+  const sizes = {};
   for (const [size, [width, quality]] of Object.entries(SCROLL.sizes)) {
+    // Never enlarge the plain renders: without the x2 set, lg stays at their width.
+    const probe = await sharp(best(0)).metadata();
+    const w = Math.min(width, probe.width);
+    sizes[size] = w;
     await mkdir(`${dir}/${size}`);
     for (let k = 0; k < count; k++) {
-      await jpeg(sharp(src(seq, k * SCROLL.step)).resize(width), quality).toFile(`${dir}/${size}/f_${pad3(k)}.jpg`);
+      await jpeg(sharp(best(k * SCROLL.step)).resize(w, null, { kernel: 'lanczos3' }), quality).toFile(`${dir}/${size}/f_${pad3(k)}.jpg`);
+    }
+  }
+  // Detail frames: sharp versions of the frames the camera rests on when zoomed in.
+  const detail = [];
+  if (hires.x4) {
+    await mkdir(`${dir}/detail`);
+    for (const f of [...new Set(detailFrames)]) {
+      const file = src(hires.x4, f * SCROLL.step);
+      if (!existsSync(file)) continue;
+      // The upscaler shifts tone a little (darker, more contrast), which would show as
+      // a jump when the view switches to the detail frame. Match each channel's mean
+      // and spread to the original frame, measured on blurred copies so the new fine
+      // detail doesn't count as contrast.
+      const tone = async (img) => (await sharp(img).resize(640).blur(3).stats()).channels.slice(0, 3);
+      const [want, have] = await Promise.all([tone(best(f * SCROLL.step)), tone(file)]);
+      const a = have.map((c, i) => want[i].stdev / c.stdev);
+      const b = have.map((c, i) => want[i].mean - c.mean * a[i]);
+      await jpeg(sharp(file).resize(DETAIL.width, null, { kernel: 'lanczos3' }).linear(a, b), DETAIL.quality).toFile(
+        `${dir}/detail/f_${pad3(f)}.jpg`,
+      );
+      detail.push(f);
     }
   }
   const manifest = {
     count,
     width: 1280, // hotspot coordinates are in this space
     height: 720,
-    sizes: Object.fromEntries(Object.entries(SCROLL.sizes).map(([k, [w]]) => [k, w])),
+    sizes,
     pattern: '{size}/f_{n}.jpg', // n = zero-padded to 3
+    ...(detail.length && { detail: { pattern: 'detail/f_{n}.jpg', frames: detail } }),
     step: SCROLL.step, // scene frame f = render frame f * step
     ...(video && { video }), // video frame k = render frame k * video.step
     hotspots: Object.fromEntries(
@@ -123,6 +157,7 @@ async function buildScrollScene(name, seq, { tracks: trackPoints = {}, video } =
     ),
   };
   await writeFile(`${dir}/manifest.json`, JSON.stringify(manifest));
+  console.log(`  ${name}: lg ${sizes.lg}px, detail frames ${detail.join(', ') || 'none'}`);
 }
 
 // Facade turntable for Tipe 1: every 5th frame -> 120 frames, cropped to the building.
@@ -184,31 +219,6 @@ const STILLS = {
   'ruko-front-34': { seq: RUKO, frame: 540, crop: [340, 120, 600, 520] },
 };
 
-// Location views: the background a scroll scene flies to when a hotspot is opened.
-// PLACEHOLDER until the client supplies a view per location (e.g. an eye-level
-// render): a close crop around the landmark, taken from the render frame where it
-// sits nearest the centre, so each location reads as a different viewpoint.
-async function buildLocations() {
-  const dir = `${OUT}/locations`;
-  if (!(await fresh(dir))) return;
-  const W = 800, H = 450; // crop; upscaled to 1600x900
-  for (const [track, pts] of Object.entries(tracks.points)) {
-    let best = -1, bestD = Infinity;
-    pts.forEach((p, i) => {
-      if (!p) return;
-      const d = Math.hypot(p[0] - 640, p[1] - 360);
-      if (d < bestD) { bestD = d; best = i; }
-    });
-    const [x, y] = pts[best];
-    const left = Math.round(Math.min(1280 - W, Math.max(0, x - W / 2)));
-    const top = Math.round(Math.min(720 - H, Math.max(0, y - H / 2)));
-    await jpeg(
-      sharp(src(KAWASAN, best)).extract({ left, top, width: W, height: H }).resize(1600, 900, { kernel: 'lanczos3' }).sharpen({ sigma: 0.8 }),
-      78,
-    ).toFile(`${dir}/${track}.jpg`);
-  }
-}
-
 async function buildStills() {
   const dir = `${OUT}/stills`;
   if (!(await fresh(dir))) return;
@@ -253,7 +263,6 @@ function areaMapSvg() {
   <g transform="translate(1500 800)" fill="${LINE}">
     <path d="M0 -44 L14 0 L0 -10 L-14 0Z"/><text y="28" text-anchor="middle" font-size="20" font-weight="700">U</text>
   </g>
-  <text x="40" y="860" font-size="18" fill="#8d8579" letter-spacing="2">PLACEHOLDER — PETA KAWASAN DARI KLIEN</text>
 </svg>`;
 }
 
@@ -277,7 +286,6 @@ function siteplanSvg() {
   <circle cx="${road.x + road.w / 2}" cy="${(road.y1 + road.y2 + road.h) / 2}" r="34" fill="${GREEN}" stroke="${LINE}" stroke-width="1.5"/>
   ${blockRects}
   <text x="${width / 2}" y="${height - 60}" text-anchor="middle" font-size="18" letter-spacing="3" fill="#4d6a72">DANAU</text>
-  <text x="40" y="44" font-size="16" fill="#8d8579" letter-spacing="2">PLACEHOLDER — SITEPLAN DARI KLIEN</text>
 </svg>`;
 }
 
@@ -292,7 +300,6 @@ function denahSvg(title, rooms) {
   <rect x="60" y="80" width="480" height="620" fill="none" stroke="${LINE}" stroke-width="10"/>
   ${cells}
   <text x="300" y="50" text-anchor="middle" font-size="24" font-weight="700" letter-spacing="4" fill="${LINE}">${title}</text>
-  <text x="300" y="760" text-anchor="middle" font-size="15" letter-spacing="2" fill="#8d8579">PLACEHOLDER — DENAH DARI KLIEN</text>
 </svg>`;
 }
 
@@ -333,13 +340,22 @@ async function seedUnits() {
 
 await seedUnits();
 await buildGraphics();
-await buildScrollScene('kawasan', KAWASAN, { tracks: tracks.points, video: HERO_VIDEO });
+{
+  // Detail frames = every hotspot's default angle (Kawasan and Cluster share these frames).
+  const { area, cluster } = await import('../src/data/area.js');
+  const detailFrames = [area, cluster].flatMap((a) => Object.values(a.hotspots).map((h) => h.frame)).filter((f) => f != null);
+  await buildScrollScene('kawasan', KAWASAN, {
+    tracks: tracks.points,
+    video: HERO_VIDEO,
+    hires: { x2: KAWASAN_X2, x4: KAWASAN_X4 },
+    detailFrames,
+  });
+}
 // Cluster: no sequence yet; the cluster scene reuses the kawasan frames
 // (src/data/area.js). When the cluster renders arrive:
 //   await buildScrollScene('cluster', CLUSTER, { tracks: clusterTracks });
 await buildFacade();
 await buildHero();
 await buildStills();
-await buildLocations();
 await buildPlaceholders();
 console.log('media done');

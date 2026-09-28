@@ -22,8 +22,6 @@ const counts = Object.fromEntries(order.map((s) => [s, units.filter((u) => u.sta
   <div class="wrap">
     <SheetHeader
       id="unit-title"
-      no="06"
-      kicker="Unit update"
       title="Status unit"
       intro="Status terbaru setiap unit di siteplan."
     />
@@ -52,7 +50,6 @@ const counts = Object.fromEntries(order.map((s) => [s, units.filter((u) => u.sta
       </div>
 
       <aside class="units__legend" data-reveal>
-        <p class="eyebrow units__total">{units.length} unit</p>
         <ul>
           {
             order.map((s) => (
@@ -172,10 +169,6 @@ const counts = Object.fromEntries(order.map((s) => [s, units.filter((u) => u.sta
     top: calc(var(--header-h) + 24px);
   }
 
-  .units__total {
-    margin: 0 0 8px;
-    color: var(--muted);
-  }
 
   .units__legend ul {
     list-style: none;
