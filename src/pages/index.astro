@@ -1,0 +1,94 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SheetHeader from '../components/SheetHeader.astro';
+import ScrollScene from '../components/ScrollScene.astro';
+import TypeGrid from '../components/home/TypeGrid.astro';
+import Facilities from '../components/home/Facilities.astro';
+import UnitUpdate from '../components/home/UnitUpdate.astro';
+import { area, areaMap, cluster } from '../data/area.js';
+import { site, url } from '../data/site.js';
+---
+
+<Base>
+  <Header variant="home" />
+
+  <main>
+    <!-- 1. Hero + 2. Area: one pinned scene; the hero video hands off to the scroll scrub -->
+    <ScrollScene
+      id="kawasan"
+      no="01"
+      kicker="Kawasan 360°"
+      title={area.title}
+      intro={area.intro}
+      scene={area.scene}
+      hotspots={area.hotspots}
+      hero={site.hero}
+    />
+
+    <!-- 3. Area map (static, no interaction) -->
+    <section id="peta" class="map" aria-labelledby="peta-title">
+      <div class="wrap">
+        <SheetHeader id="peta-title" no="02" kicker="Peta" title={areaMap.title} intro={areaMap.intro} />
+        <figure class="map__figure" data-reveal>
+          <img
+            src={url(areaMap.image)}
+            alt={areaMap.alt}
+            width={areaMap.width}
+            height={areaMap.height}
+            loading="lazy"
+          />
+          {site.showPlaceholderBadges && areaMap.placeholder && <span class="badge map__badge">Peta contoh</span>}
+        </figure>
+      </div>
+    </section>
+
+    <!-- 4. Cluster: scroll scene like Kawasan -->
+    <ScrollScene
+      id="cluster"
+      no="03"
+      kicker="Cluster 360°"
+      title={cluster.title}
+      intro={cluster.intro}
+      scene={cluster.scene}
+      hotspots={cluster.hotspots}
+    />
+
+    <!-- 5. Facilities -->
+    <Facilities />
+
+    <!-- 6. Unit types -->
+    <TypeGrid />
+
+    <!-- 7. Unit update -->
+    <UnitUpdate />
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .map {
+    padding-bottom: clamp(64px, 9vw, 120px);
+  }
+
+  .map__figure {
+    position: relative;
+    margin: 0;
+    overflow-x: auto;
+  }
+
+  .map__figure img {
+    width: 100%;
+    min-width: 560px;
+    height: auto;
+    box-shadow: 0 1px 0 var(--rule), 0 30px 60px -40px rgba(29, 27, 23, 0.4);
+  }
+
+  .map__badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+  }
+</style>

@@ -1,0 +1,243 @@
+---
+// One shared <dialog> for everything that opens over the page:
+//   video   — Play Full Video
+//   gallery — type gallery and denah (lightbox with prev/next)
+//   iframe  — 3DVista VR tour
+//   info    — area/cluster hotspot panel (text + image), shown as a side sheet
+// Opened from src/scripts/overlay.js via [data-open] triggers or window.drOverlay.open().
+---
+
+<dialog class="ov" id="overlay" aria-labelledby="ov-title">
+  <div class="ov__bar">
+    <p class="ov__title eyebrow" id="ov-title"></p>
+    <div class="ov__tools">
+      <span class="ov__count eyebrow" hidden></span>
+      <a class="btn btn--light ov__ext" target="_blank" rel="noopener" hidden>Buka di tab baru</a>
+      <button class="icon-btn ov__close" type="button" aria-label="Tutup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 5l14 14M19 5L5 19"></path></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="ov__body">
+    <!-- video -->
+    <video class="ov__video" controls playsinline preload="none" hidden></video>
+
+    <!-- gallery -->
+    <figure class="ov__gallery" hidden>
+      <img class="ov__img" alt="" />
+      <figcaption class="ov__caption"></figcaption>
+      <button class="icon-btn ov__prev" type="button" aria-label="Sebelumnya">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 5l-7 7 7 7"></path></svg>
+      </button>
+      <button class="icon-btn ov__next" type="button" aria-label="Berikutnya">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </figure>
+
+    <!-- iframe (VR) -->
+    <iframe class="ov__frame" title="" allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer" hidden></iframe>
+
+    <!-- hotspot info -->
+    <article class="ov__info" hidden>
+      <img class="ov__info-img" alt="" />
+      <div class="ov__info-text">
+        <h2 class="display ov__info-title"></h2>
+        <p class="ov__info-body"></p>
+      </div>
+    </article>
+  </div>
+</dialog>
+
+<style>
+  .ov {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(12, 12, 10, 0.96);
+    color: var(--room-ink);
+    overscroll-behavior: contain;
+  }
+
+  .ov[open] {
+    display: flex;
+    flex-direction: column;
+    animation: ov-in 0.35s var(--ease);
+  }
+
+  .ov::backdrop {
+    background: rgba(12, 12, 10, 0.6);
+  }
+
+  @keyframes ov-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .ov__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: calc(12px + env(safe-area-inset-top, 0px)) var(--gutter) 12px;
+  }
+
+  .ov__title {
+    margin: 0;
+    color: var(--room-muted);
+  }
+
+  .ov__tools {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .ov__count {
+    color: var(--room-muted);
+  }
+
+  .ov__close:hover,
+  .ov__prev:hover,
+  .ov__next:hover {
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .ov__body {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+    padding: 0 var(--gutter) calc(var(--gutter) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .ov__video,
+  .ov__frame {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border: 0;
+    background: #000;
+  }
+
+  .ov__video {
+    object-fit: contain;
+  }
+
+  .ov__gallery {
+    position: relative;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    place-items: center;
+    gap: 12px;
+    touch-action: pan-y;
+  }
+
+  .ov__img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    background: #fbf9f5;
+  }
+
+  .ov__caption {
+    color: var(--room-muted);
+    font-size: 13px;
+  }
+
+  .ov__prev,
+  .ov__next {
+    position: absolute;
+    top: 50%;
+    translate: 0 -50%;
+    background: rgba(12, 12, 10, 0.55);
+  }
+
+  .ov__prev {
+    left: 0;
+  }
+
+  .ov__next {
+    right: 0;
+  }
+
+  /* Hotspot info: side sheet on wide screens, bottom sheet on phones. */
+  .ov.is-info {
+    background: transparent;
+    width: min(460px, 100%);
+    margin-left: auto;
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: -24px 0 60px rgba(0, 0, 0, 0.35);
+    animation: sheet-in 0.45s var(--ease);
+  }
+
+  .ov.is-info .ov__title {
+    color: var(--muted);
+  }
+
+  .ov.is-info .ov__close:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .ov.is-info .ov__body {
+    place-items: start stretch;
+    overflow-y: auto;
+  }
+
+  @keyframes sheet-in {
+    from {
+      transform: translateX(40px);
+      opacity: 0;
+    }
+  }
+
+  .ov__info-img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+  }
+
+  .ov__info-text {
+    padding-top: 24px;
+  }
+
+  .ov__info-title {
+    margin: 0 0 16px;
+    font-size: clamp(36px, 5vw, 48px);
+  }
+
+  .ov__info-body {
+    margin: 0;
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 640px) {
+    .ov.is-info {
+      width: 100%;
+      height: auto;
+      max-height: 85%;
+      margin: auto 0 0;
+      border-radius: 16px 16px 0 0;
+      animation-name: sheet-up;
+    }
+
+    @keyframes sheet-up {
+      from {
+        transform: translateY(40px);
+        opacity: 0;
+      }
+    }
+  }
+</style>

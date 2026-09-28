@@ -1,0 +1,638 @@
+---
+// Type page. Left column: one 360° image sequence that stays on screen while the
+// page scrolls through its parts (facade, then each floor). Each part is a
+// keyframe: reaching it, by scrolling or from the part list in the panel,
+// animates the sequence there and shows the part's text and denah. Dragging
+// still rotates freely. Right column stays fixed: property info, denah, Gallery
+// and VR. On narrow screens the info sits above the viewer and a bottom bar
+// keeps key facts, Gallery and VR in reach.
+import Base from '../../layouts/Base.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Turntable from '../../components/Turntable.astro';
+import { types } from '../../data/types.js';
+import { site, url } from '../../data/site.js';
+
+export function getStaticPaths() {
+  return types.map((t) => ({ params: { slug: t.slug }, props: { t } }));
+}
+
+const { t } = Astro.props;
+
+const { parts } = t;
+const denahIndex = (label) => t.denah.findIndex((d) => d.label === label);
+const pad = (i) => String(i + 1).padStart(2, '0');
+
+const galleryPayload = JSON.stringify({
+  title: `${t.name} — Galeri`,
+  items: t.gallery.map((src, i) => ({ src: url(src), alt: `${t.name}, gambar ${i + 1}` })),
+});
+const denahItems = t.denah.map((d) => ({ src: url(d.image), caption: d.label, alt: `Denah ${d.label}` }));
+const denahPayload = (index) => JSON.stringify({ title: `${t.name} — Denah`, items: denahItems, index });
+const vrPayload = JSON.stringify({ src: url(t.vr.url), title: `${t.name} — Tur VR` });
+const facts = [
+  ['LT', `${t.lt} m²`],
+  ['LB', `${t.lb} m²`],
+  ['KT', t.bedrooms],
+  ['KM', t.bathrooms],
+];
+---
+
+<Base title={t.name} description={`${t.name}: fasad dan setiap lantai dalam 360°, denah, galeri, dan tur VR.`} bodyClass="is-type">
+  <Header variant="type" />
+
+  <main class="tp wrap">
+    <div class="tp__track" data-parts={JSON.stringify(parts.map(({ name, kind, text, frame }) => ({ name, kind, text, frame })))} style={`--parts: ${parts.length}`}>
+      {parts.map((p, i) => <span class="tp__step" id={p.id} data-part-step={i} style={`--i: ${i}`} aria-hidden="true" />)}
+
+      <section class="viewer" aria-labelledby="part-title" style={`--ratio: ${t.sequence.width / t.sequence.height}`}>
+        <div class="viewer__head">
+          <div>
+            <p class="eyebrow viewer__no">
+              <span data-part-no>01</span> — <span data-part-kind>{parts[0].kind}</span>
+            </p>
+            <h2 class="display viewer__title" id="part-title" data-part-name>{parts[0].name}</h2>
+          </div>
+          <nav class="viewer__dots" aria-label="Bagian">
+            {
+              parts.map((p, i) => (
+                <a href={`#${p.id}`} class:list={{ 'is-active': i === 0 }} data-part-dot aria-label={p.name} />
+              ))
+            }
+          </nav>
+        </div>
+
+        <div class="viewer__stage">
+          <Turntable id={`tt-${t.slug}`} label={`${t.name}, fasad dan lantai`} turntable={t.sequence} tone="black" />
+        </div>
+
+        <div class="viewer__info">
+          <p class="viewer__text" data-part-text aria-live="polite">{parts[0].text}</p>
+          {
+            parts.map((p, i) => {
+              const d = p.denah ? denahIndex(p.denah) : -1;
+              return (
+                d >= 0 && (
+                  <button class="viewer__denah" type="button" data-part-denah={i} data-open="gallery" data-payload={denahPayload(d)} hidden={i !== 0}>
+                    <img src={url(t.denah[d].image)} alt="" loading="lazy" />
+                    <span>Denah {t.denah[d].label}</span>
+                  </button>
+                )
+              );
+            })
+          }
+        </div>
+      </section>
+    </div>
+
+    <aside class="tp__panel" aria-label={`Informasi ${t.name}`}>
+      <div class="panel">
+        <p class="eyebrow panel__kicker">
+          Tipe unit
+          {site.showPlaceholderBadges && t.placeholder && <span class="badge">Data contoh</span>}
+        </p>
+        <h1 class="display panel__name">{t.name}</h1>
+        {t.label && <p class="panel__label eyebrow">{t.label}</p>}
+
+        <dl class="panel__facts">
+          {
+            facts.map(([k, v]) => (
+              <div>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        <p class="panel__intro">{t.intro}</p>
+
+        <dl class="panel__info">
+          {
+            t.info.map(([k, v]) => (
+              <div>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        <nav class="panel__floors" aria-label="Bagian">
+          {
+            parts.map((p, i) => (
+              <a href={`#${p.id}`} data-part-link={i} class:list={{ 'is-active': i === 0 }}>
+                <span>{pad(i)}</span>
+                {p.name}
+              </a>
+            ))
+          }
+        </nav>
+
+        <div class="panel__denah">
+          <p class="eyebrow">Denah</p>
+          <ul>
+            {
+              t.denah.map((d, i) => (
+                <li>
+                  <button type="button" data-open="gallery" data-payload={denahPayload(i)} aria-label={`Buka denah ${d.label}`}>
+                    <img src={url(d.image)} alt="" loading="lazy" />
+                    <span>{d.label}</span>
+                  </button>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div class="panel__actions">
+          <button class="btn" type="button" data-open="gallery" data-payload={galleryPayload}>Gallery</button>
+          <button class="btn btn--solid" type="button" data-open="iframe" data-payload={vrPayload}>VR</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Narrow screens: facts, Gallery and VR stay reachable while scrolling. -->
+  <div class="dock" aria-label={`${t.name} ringkas`}>
+    <div class="dock__info">
+      <strong class="display">{t.name}</strong>
+      <span>{facts.map(([k, v]) => `${k} ${v}`).join(' · ')}</span>
+    </div>
+    <button class="btn" type="button" data-open="gallery" data-payload={galleryPayload}>Gallery</button>
+    <button class="btn btn--solid" type="button" data-open="iframe" data-payload={vrPayload}>VR</button>
+  </div>
+
+  <Footer />
+</Base>
+
+<style>
+  .tp {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 400px);
+    gap: clamp(32px, 4vw, 64px);
+    padding-top: var(--header-h);
+  }
+
+  /* ---- left: one viewer, pinned while the page scrolls through the parts */
+  .tp__track {
+    position: relative;
+    height: calc(var(--parts) * (100vh - var(--header-h)));
+    height: calc(var(--parts) * (100svh - var(--header-h)));
+  }
+
+  /* One screen of scroll per part; the part list links land on these. */
+  .tp__step {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--i) * (100svh - var(--header-h)));
+    height: calc(100svh - var(--header-h));
+    pointer-events: none;
+  }
+
+  .viewer {
+    /* Width that keeps the head, sequence, controls and info inside one screen. */
+    --stage-w: calc((100svh - var(--header-h) - 360px) * var(--ratio));
+    position: sticky;
+    top: var(--header-h);
+    height: calc(100vh - var(--header-h));
+    height: calc(100svh - var(--header-h));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+    padding-block: 28px;
+  }
+
+  .viewer__head,
+  .viewer__info {
+    width: 100%;
+    max-width: max(var(--stage-w), min(100%, 320px));
+  }
+
+  .viewer__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .viewer__no {
+    margin: 0 0 6px;
+    color: var(--accent);
+  }
+
+  .viewer__title {
+    margin: 0;
+    font-size: clamp(40px, 5vw, 72px);
+  }
+
+  .viewer__dots {
+    display: flex;
+    gap: 6px;
+    margin: 0 0 4px;
+  }
+
+  /* A 3px bar inside a comfortable tap target. */
+  .viewer__dots a {
+    display: block;
+    width: 22px;
+    padding-block: 10px;
+    background: linear-gradient(var(--rule), var(--rule)) center / 100% 3px no-repeat;
+    transition: width 0.4s var(--ease);
+  }
+
+  .viewer__dots a:hover {
+    background-image: linear-gradient(var(--muted), var(--muted));
+  }
+
+  .viewer__dots a.is-active {
+    width: 40px;
+    background-image: linear-gradient(var(--ink), var(--ink));
+  }
+
+  .viewer__stage {
+    width: 100%;
+    max-width: var(--stage-w);
+    min-width: min(100%, 320px);
+  }
+
+  .viewer__stage :global(.tt) {
+    color: var(--ink);
+    margin-inline: 0;
+  }
+
+  .viewer__stage :global(.tt__hint) {
+    color: var(--muted);
+  }
+
+  .viewer__stage :global(.tt__step:hover) {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .viewer__info {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    min-height: 84px;
+  }
+
+  .viewer__text {
+    flex: 1;
+    max-width: 56ch;
+    margin: 0;
+    color: var(--ink-2);
+  }
+
+  .viewer__denah {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px 6px 6px;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: border-color 0.2s;
+  }
+
+  .viewer__denah:hover {
+    border-color: var(--ink);
+  }
+
+  .viewer__denah img {
+    width: 54px;
+    height: 72px;
+    object-fit: cover;
+  }
+
+  /* ---- right: fixed panel */
+  .tp__panel {
+    position: relative;
+  }
+
+  .panel {
+    position: sticky;
+    top: var(--header-h);
+    max-height: calc(100vh - var(--header-h));
+    max-height: calc(100svh - var(--header-h));
+    overflow-y: auto;
+    padding-block: 40px 0;
+    scrollbar-width: thin;
+  }
+
+  .panel__kicker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 8px;
+    color: var(--muted);
+  }
+
+  .panel__name {
+    margin: 0;
+    font-size: clamp(56px, 6vw, 88px);
+  }
+
+  .panel__label {
+    margin: 4px 0 0;
+    color: var(--accent);
+  }
+
+  .panel__facts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin: 24px 0 0;
+    border-block: 1px solid var(--ink);
+  }
+
+  .panel__facts div {
+    padding: 12px 0;
+  }
+
+  .panel__facts div + div {
+    padding-left: 12px;
+    border-left: 1px solid var(--rule);
+  }
+
+  .panel__facts dt,
+  .panel__info dt {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .panel__facts dd {
+    margin: 2px 0 0;
+    font-size: 17px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .panel__intro {
+    margin: 20px 0;
+    color: var(--ink-2);
+    font-size: 15px;
+  }
+
+  .panel__info {
+    margin: 0;
+  }
+
+  .panel__info div {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 14px;
+  }
+
+  .panel__info dd {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .panel__floors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 24px 0;
+  }
+
+  .panel__floors a {
+    display: inline-flex;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.25s var(--ease), color 0.25s var(--ease), border-color 0.25s;
+  }
+
+  .panel__floors a span {
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  .panel__floors a:hover {
+    border-color: var(--ink);
+  }
+
+  .panel__floors a.is-active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+
+  .panel__denah p {
+    margin: 0 0 10px;
+    color: var(--muted);
+  }
+
+  .panel__denah ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .panel__denah button {
+    width: 100%;
+    padding: 0;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    text-align: left;
+    transition: border-color 0.2s, transform 0.3s var(--ease);
+  }
+
+  .panel__denah button:hover {
+    border-color: var(--ink);
+    transform: translateY(-2px);
+  }
+
+  .panel__denah img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+  }
+
+  .panel__denah span {
+    display: block;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* Pinned to the bottom of the panel so Gallery and VR stay on screen even
+     when the panel itself has to scroll on short viewports. */
+  .panel__actions {
+    position: sticky;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 24px;
+    padding-block: 14px 20px;
+    background: var(--paper);
+    box-shadow: 0 -1px 0 var(--rule), 0 -16px 16px -8px var(--paper);
+  }
+
+  .panel__actions .btn:not(.btn--solid):not(:hover) {
+    background: var(--paper);
+  }
+
+  .panel__actions .btn {
+    justify-content: center;
+  }
+
+  /* ---- dock (narrow screens) */
+  .dock {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .tp {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .tp__panel {
+      order: -1;
+    }
+
+    .panel {
+      position: static;
+      max-height: none;
+      overflow: visible;
+      padding-bottom: 8px;
+    }
+
+    .panel__actions {
+      display: none;
+    }
+
+    .viewer {
+      /* leave room for the bottom dock */
+      height: calc(100svh - var(--header-h) - 72px);
+      gap: 14px;
+      padding-block: 16px;
+    }
+
+    .viewer {
+      --stage-w: calc((100svh - var(--header-h) - 72px - 330px) * var(--ratio));
+    }
+
+    .viewer__info {
+      min-height: 0;
+    }
+
+    .viewer__text {
+      font-size: 14px;
+    }
+
+    .dock {
+      position: fixed;
+      inset: auto 0 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom, 0px));
+      background: rgba(239, 233, 223, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 -1px 0 var(--rule);
+    }
+
+    .dock__info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .dock__info strong {
+      font-size: 22px;
+      font-weight: 400;
+    }
+
+    .dock__info span {
+      font-size: 11px;
+      color: var(--ink-2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dock .btn {
+      min-height: 40px;
+      padding: 8px 14px;
+      font-size: 12px;
+    }
+
+    :global(body.is-type .ft) {
+      padding-bottom: 72px;
+    }
+  }
+</style>
+
+<script>
+  // Parts: the step on screen picks the part. Changing part animates the one
+  // sequence to that part's keyframe (turntable.js, `tt:goto`) and swaps the
+  // text, denah and highlights.
+  const track = document.querySelector('[data-parts]');
+  const parts = JSON.parse(track.dataset.parts);
+  const tt = track.querySelector('[data-turntable]');
+  const $ = (sel) => [...document.querySelectorAll(sel)];
+  const no = track.querySelector('[data-part-no]');
+  const kind = track.querySelector('[data-part-kind]');
+  const name = track.querySelector('[data-part-name]');
+  const text = track.querySelector('[data-part-text]');
+  let active = 0;
+
+  function setPart(i) {
+    if (i === active) return;
+    active = i;
+    const p = parts[i];
+    tt.dataset.goto = String(p.frame); // picked up if the viewer is still starting
+    tt.dispatchEvent(new CustomEvent('tt:goto', { detail: { frame: p.frame } }));
+    no.textContent = String(i + 1).padStart(2, '0');
+    kind.textContent = p.kind;
+    name.textContent = p.name;
+    text.textContent = p.text;
+    for (const el of [name, text]) {
+      el.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 450, easing: 'ease-out' });
+    }
+    $('[data-part-denah]').forEach((b) => (b.hidden = Number(b.dataset.partDenah) !== i));
+    $('[data-part-dot]').forEach((d, k) => d.classList.toggle('is-active', k === i));
+    $('[data-part-link]').forEach((a) => {
+      const on = Number(a.dataset.partLink) === i;
+      a.classList.toggle('is-active', on);
+      on ? a.setAttribute('aria-current', 'step') : a.removeAttribute('aria-current');
+    });
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) if (e.isIntersecting) setPart(Number(e.target.dataset.partStep));
+    },
+    { rootMargin: '-50% 0px -50% 0px' },
+  );
+  $('[data-part-step]').forEach((s) => io.observe(s));
+</script></script>

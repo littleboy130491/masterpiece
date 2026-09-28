@@ -1,0 +1,35 @@
+---
+import '../styles/global.css';
+import Overlay from '../components/Overlay.astro';
+import { site } from '../data/site.js';
+
+interface Props {
+  title?: string;
+  description?: string;
+  bodyClass?: string;
+}
+
+const { title, description = site.description, bodyClass = '' } = Astro.props;
+const pageTitle = title ? `${title} — ${site.fullName}` : site.fullName;
+---
+
+<!doctype html>
+<html lang={site.lang} class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#12120f" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2312120f'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Georgia,serif' font-size='16' fill='%23efe9df'%3EDR%3C/text%3E%3C/svg%3E" />
+    <script is:inline>document.documentElement.classList.remove('no-js');</script>
+  </head>
+  <body class={bodyClass}>
+    <slot />
+    <Overlay />
+    <script>
+      import '../scripts/reveal.js';
+      import '../scripts/overlay.js';
+    </script>
+  </body>
+</html>

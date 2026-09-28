@@ -1,0 +1,37 @@
+---
+import { site } from '../data/site.js';
+---
+
+<footer class="ft room">
+  <div class="wrap ft__inner">
+    <p class="display ft__mark">{site.fullName}</p>
+    <p class="ft__meta">
+      © {new Date().getFullYear()} {site.fullName}. Tampilan 360° oleh
+      <a href="https://www.webrotate360.com/" rel="noopener" target="_blank">WebRotate 360</a>, tur VR oleh
+      <a href="https://www.3dvista.com/" rel="noopener" target="_blank">3DVista</a>.
+    </p>
+  </div>
+</footer>
+
+<style>
+  .ft__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px 40px;
+    padding-block: 48px calc(48px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .ft__mark {
+    margin: 0;
+    font-size: clamp(36px, 5vw, 64px);
+  }
+
+  .ft__meta {
+    margin: 0;
+    max-width: 52ch;
+    color: var(--room-muted);
+    font-size: 13px;
+  }
+</style>

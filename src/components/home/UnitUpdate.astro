@@ -1,0 +1,223 @@
+---
+// Unit update: siteplan image with a status dot per unit (red sold, yellow
+// reserved, green available). Status display only; dots do not open units.
+// Dot positions are percentages of the siteplan image (src/data/units.json).
+import SheetHeader from '../SheetHeader.astro';
+import units from '../../data/units.json';
+import { site, statusLabels, url } from '../../data/site.js';
+
+const siteplan = {
+  // PLACEHOLDER: drawn stand-in until the client supplies the siteplan.
+  image: '/media/placeholder/siteplan.svg',
+  width: 1600,
+  height: 1000,
+  placeholder: true,
+};
+
+const order = ['available', 'reserved', 'sold'];
+const counts = Object.fromEntries(order.map((s) => [s, units.filter((u) => u.status === s).length]));
+---
+
+<section id="unit-update" class="units" aria-labelledby="unit-title">
+  <div class="wrap">
+    <SheetHeader
+      id="unit-title"
+      no="06"
+      kicker="Unit update"
+      title="Status unit"
+      intro="Status terbaru setiap unit di siteplan."
+    />
+
+    <div class="units__layout">
+      <div class="units__plan" data-reveal>
+        <div class="units__frame" style={`aspect-ratio: ${siteplan.width} / ${siteplan.height}`}>
+          <img src={url(siteplan.image)} alt="Siteplan cluster" loading="lazy" />
+          <ul class="units__dots" aria-label="Status unit">
+            {
+              units.map((u) => (
+                <li
+                  class={`dot dot--${u.status}`}
+                  style={`left: ${u.x}%; top: ${u.y}%`}
+                  title={`${u.id} · ${statusLabels[u.status]}`}
+                >
+                  <span class="visually-hidden">
+                    {u.id}: {statusLabels[u.status]}
+                  </span>
+                </li>
+              ))
+            }
+          </ul>
+          {site.showPlaceholderBadges && siteplan.placeholder && <span class="badge units__badge">Siteplan contoh</span>}
+        </div>
+      </div>
+
+      <aside class="units__legend" data-reveal>
+        <p class="eyebrow units__total">{units.length} unit</p>
+        <ul>
+          {
+            order.map((s) => (
+              <li>
+                <span class={`dot dot--${s} dot--static`} aria-hidden="true" />
+                <span class="units__label">{statusLabels[s]}</span>
+                <span class="units__count display">{counts[s]}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="units__bar" aria-hidden="true">
+          {order.map((s) => <span class={`units__seg units__seg--${s}`} style={`flex: ${counts[s]}`} />)}
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<style>
+  .units {
+    padding-bottom: clamp(72px, 10vw, 140px);
+    background: var(--paper-2);
+  }
+
+  .units__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: clamp(24px, 4vw, 56px);
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .units__layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .units__plan {
+    overflow-x: auto;
+  }
+
+  .units__frame {
+    position: relative;
+    min-width: 560px;
+    background: var(--paper);
+    box-shadow: 0 1px 0 var(--rule), 0 30px 60px -40px rgba(29, 27, 23, 0.4);
+  }
+
+  .units__frame img {
+    width: 100%;
+    height: 100%;
+  }
+
+  .units__dots {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .dot {
+    position: absolute;
+    width: clamp(10px, 1.1vw, 16px);
+    height: clamp(10px, 1.1vw, 16px);
+    border-radius: 50%;
+    translate: -50% -50%;
+    background: var(--c);
+    box-shadow: 0 0 0 2px var(--paper), 0 1px 3px rgba(0, 0, 0, 0.35);
+  }
+
+  .dot--static {
+    position: static;
+    translate: none;
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+  }
+
+  .dot--sold {
+    --c: var(--sold);
+  }
+  .dot--reserved {
+    --c: var(--reserved);
+  }
+  .dot--available {
+    --c: var(--available);
+  }
+
+  .units__dots .dot--available::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--available);
+    animation: ping 2.6s var(--ease) infinite;
+  }
+
+  @keyframes ping {
+    from {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    to {
+      transform: scale(2.4);
+      opacity: 0;
+    }
+  }
+
+  .units__badge {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+  }
+
+  .units__legend {
+    position: sticky;
+    top: calc(var(--header-h) + 24px);
+  }
+
+  .units__total {
+    margin: 0 0 8px;
+    color: var(--muted);
+  }
+
+  .units__legend ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .units__legend li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .units__label {
+    flex: 1;
+    font-weight: 600;
+  }
+
+  .units__count {
+    font-size: 40px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .units__bar {
+    display: flex;
+    height: 6px;
+    margin-top: 20px;
+    border-radius: 3px;
+    overflow: hidden;
+    gap: 2px;
+  }
+
+  .units__seg--available {
+    background: var(--available);
+  }
+  .units__seg--reserved {
+    background: var(--reserved);
+  }
+  .units__seg--sold {
+    background: var(--sold);
+  }
+</style>

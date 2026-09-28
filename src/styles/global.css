@@ -1,0 +1,276 @@
+@import '@fontsource-variable/manrope';
+@import '@fontsource/instrument-serif/400.css';
+@import '@fontsource/instrument-serif/400-italic.css';
+
+:root {
+  --paper: #efe9df;
+  --paper-2: #e6dfd2;
+  --card: #f8f5ef;
+  --ink: #1d1b17;
+  --ink-2: #4a463f;
+  --muted: #7d766b;
+  --rule: #cfc6b7;
+  --room: #12120f; /* dark "viewing room" bands for turntables */
+  --room-2: #1b1a16;
+  --room-ink: #ece6da;
+  --room-muted: #8f887b;
+  --accent: #b4662f; /* timber / terracotta from the facade renders */
+  --accent-ink: #8a4a1f;
+
+  --sold: #d4432c;
+  --reserved: #e8b424;
+  --available: #3f9b57;
+
+  --serif: 'Instrument Serif', 'Times New Roman', serif;
+  --sans: 'Manrope Variable', 'Helvetica Neue', Arial, sans-serif;
+
+  --gutter: clamp(16px, 4vw, 56px);
+  --max: 1440px;
+  --header-h: 64px;
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--header-h);
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ---------------------------------------------------------------- type */
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.display {
+  font-family: var(--serif);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+}
+
+/* Section header styled like a drawing-sheet title block. */
+.sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px 48px;
+  align-items: end;
+  padding-block: clamp(56px, 9vw, 120px) clamp(28px, 4vw, 48px);
+}
+
+.sheet__no {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--accent);
+  margin-bottom: 18px;
+}
+
+.sheet__no::after {
+  content: '';
+  height: 1px;
+  width: 64px;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.sheet__title {
+  margin: 0;
+  font-size: clamp(48px, 8vw, 112px);
+}
+
+.sheet__intro {
+  margin: 0;
+  max-width: 44ch;
+  color: var(--ink-2);
+  justify-self: end;
+}
+
+@media (max-width: 760px) {
+  .sheet {
+    grid-template-columns: 1fr;
+  }
+  .sheet__intro {
+    justify-self: start;
+  }
+}
+
+.room {
+  background: var(--room);
+  color: var(--room-ink);
+}
+
+.room .sheet__intro {
+  color: var(--room-muted);
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.25s var(--ease), color 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+
+.btn:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.btn--solid {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.btn--solid:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn--light {
+  color: #fff;
+}
+
+.btn--light:hover {
+  background: #fff;
+  border-color: #fff;
+  color: var(--ink);
+}
+
+.btn[aria-disabled='true'] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Placeholder badge: marks stand-in media/data. */
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(-45deg, #f3d9a4 0 6px, #efd092 6px 12px);
+  color: #5c3a0c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------- reveal */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+}
+
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.no-js [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
