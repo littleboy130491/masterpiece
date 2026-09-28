@@ -1,0 +1,18 @@
+# Static Astro build on Apache / LiteSpeed.
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+AddType video/mp4 .mp4
+AddType image/svg+xml .svg
+AddType application/json .json
+
+# Hashed build assets never change; media files keep their names, so cache them shorter.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  <FilesMatch "\.(js|css|woff2?)$">
+    ExpiresDefault "access plus 1 year"
+  </FilesMatch>
+  <FilesMatch "\.(jpe?g|png|webp|svg|mp4|json|xml)$">
+    ExpiresDefault "access plus 7 days"
+  </FilesMatch>
+</IfModule>
