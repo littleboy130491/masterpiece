@@ -213,7 +213,7 @@ const facts = [
 
   .viewer__title {
     margin: 0;
-    font-size: clamp(40px, 5vw, 72px);
+    font-size: clamp(36px, 4.4vw, 64px);
   }
 
   .viewer__dots {
@@ -237,7 +237,7 @@ const facts = [
 
   .viewer__dots a.is-active {
     width: 40px;
-    background-image: linear-gradient(var(--ink), var(--ink));
+    background-image: linear-gradient(var(--accent), var(--accent));
   }
 
   .viewer__stage {
@@ -277,9 +277,10 @@ const facts = [
     padding: 6px 12px 6px 6px;
     border: 1px solid var(--rule);
     background: var(--card);
+    font-family: var(--label);
     font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    font-weight: 500;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     transition: border-color 0.2s;
   }
@@ -312,7 +313,7 @@ const facts = [
 
   .panel__name {
     margin: 0;
-    font-size: clamp(56px, 6vw, 88px);
+    font-size: clamp(52px, 5.4vw, 80px);
   }
 
   .panel__label {
@@ -338,8 +339,9 @@ const facts = [
 
   .panel__facts dt,
   .panel__info dt {
-    font-size: 10px;
-    font-weight: 700;
+    font-family: var(--label);
+    font-size: 11px;
+    font-weight: 400;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--muted);
@@ -348,7 +350,7 @@ const facts = [
   .panel__facts dd {
     margin: 2px 0 0;
     font-size: 17px;
-    font-weight: 600;
+    font-weight: 400;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
@@ -373,7 +375,7 @@ const facts = [
 
   .panel__info dd {
     margin: 0;
-    font-weight: 600;
+    font-weight: 400;
   }
 
   .panel__floors {
@@ -388,17 +390,20 @@ const facts = [
     gap: 8px;
     padding: 7px 14px;
     border: 1px solid var(--rule);
-    border-radius: 999px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 400;
     text-decoration: none;
     transition: background 0.25s var(--ease), color 0.25s var(--ease), border-color 0.25s;
   }
 
   .panel__floors a span {
     color: var(--accent);
-    font-size: 11px;
-    letter-spacing: 0.1em;
+    font-family: var(--label);
+    font-size: 12px;
+  }
+
+  .panel__floors a.is-active span {
+    color: var(--accent-light);
   }
 
   .panel__floors a:hover {
@@ -443,9 +448,10 @@ const facts = [
   .panel__denah span {
     display: block;
     padding: 6px 8px;
+    font-family: var(--label);
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-weight: 500;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     border-top: 1px solid var(--rule);
   }
@@ -525,7 +531,7 @@ const facts = [
       align-items: center;
       gap: 8px;
       padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom, 0px));
-      background: rgba(239, 233, 223, 0.95);
+      background: rgba(243, 244, 242, 0.95);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       box-shadow: 0 -1px 0 var(--rule);
@@ -541,7 +547,6 @@ const facts = [
 
     .dock__info strong {
       font-size: 22px;
-      font-weight: 400;
     }
 
     .dock__info span {

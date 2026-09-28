@@ -101,9 +101,8 @@ import { site, url } from '../../data/site.js';
     place-items: center;
     width: 44px;
     height: 44px;
-    border-radius: 50%;
-    background: var(--paper);
-    color: var(--ink);
+    background: var(--accent);
+    color: #fff;
     transform: translateY(8px);
     opacity: 0;
     transition: opacity 0.3s var(--ease), transform 0.3s var(--ease), background 0.3s;
@@ -137,7 +136,7 @@ import { site, url } from '../../data/site.js';
 
   .card__name {
     margin: 0;
-    font-size: clamp(30px, 3vw, 40px);
+    font-size: clamp(28px, 2.6vw, 36px);
   }
 
   .card__label {
@@ -154,8 +153,8 @@ import { site, url } from '../../data/site.js';
   }
 
   .card__specs dt {
-    font-size: 10px;
-    font-weight: 700;
+    font-family: var(--label);
+    font-size: 11px;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--muted);
@@ -163,8 +162,8 @@ import { site, url } from '../../data/site.js';
 
   .card__specs dd {
     margin: 2px 0 0;
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 400;
     font-variant-numeric: tabular-nums;
   }
 </style>

@@ -230,8 +230,8 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
     inset: 0;
     pointer-events: none;
     background:
-      linear-gradient(180deg, rgba(10, 10, 8, 0.55) 0%, rgba(10, 10, 8, 0) 26%),
-      linear-gradient(0deg, rgba(10, 10, 8, 0.8) 0%, rgba(10, 10, 8, 0.12) 52%);
+      linear-gradient(180deg, rgba(8, 10, 12, 0.55) 0%, rgba(8, 10, 12, 0) 26%),
+      linear-gradient(0deg, rgba(8, 10, 12, 0.8) 0%, rgba(8, 10, 12, 0.12) 52%);
   }
 
   /* Extra shade behind the section panel, faded in with it. */
@@ -239,13 +239,13 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(10, 10, 8, 0.6) 0%, rgba(10, 10, 8, 0.25) 38%, rgba(10, 10, 8, 0) 60%);
+    background: linear-gradient(90deg, rgba(8, 10, 12, 0.6) 0%, rgba(8, 10, 12, 0.25) 38%, rgba(8, 10, 12, 0) 60%);
     opacity: var(--p-area, 0);
   }
 
   @media (max-width: 760px) {
     .scene__shade::after {
-      background: linear-gradient(0deg, rgba(10, 10, 8, 0.7) 0%, rgba(10, 10, 8, 0) 60%);
+      background: linear-gradient(0deg, rgba(8, 10, 12, 0.7) 0%, rgba(8, 10, 12, 0) 60%);
     }
   }
 
@@ -277,14 +277,14 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
 
   .scene__eyebrow {
     margin: 0 0 20px;
-    color: #f0c9a4;
+    color: var(--accent-light);
     animation: rise 1s 0.2s var(--ease) both;
   }
 
   .scene__title {
     margin: 0;
-    max-width: 13ch;
-    font-size: clamp(52px, 9vw, 136px);
+    max-width: 14ch;
+    font-size: clamp(48px, 8.4vw, 128px);
     animation: rise 1.1s 0.35s var(--ease) both;
   }
 
@@ -312,7 +312,6 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
     place-items: center;
     width: 64px;
     height: 64px;
-    border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.7);
     transition: background 0.3s var(--ease), color 0.3s var(--ease), transform 0.3s var(--ease);
   }
@@ -324,16 +323,17 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
   }
 
   .scene__play-label {
+    font-family: var(--label);
     font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
+    font-weight: 500;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
   }
 
   .scene__play:hover .scene__play-icon {
-    background: #fff;
-    color: var(--ink);
-    transform: scale(1.06);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
   }
 
   .scene__cue {
@@ -384,8 +384,8 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
 
 
   .scene__area-title {
-    margin: 0 0 12px;
-    font-size: clamp(56px, 8vw, 112px);
+    margin: 0 0 16px;
+    font-size: clamp(52px, 7.4vw, 104px);
   }
 
   .scene__intro {
@@ -417,14 +417,15 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
   }
 
   .scene__list button span {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    color: #f0c9a4;
+    font-family: var(--label);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--accent-light);
   }
 
   .scene__list button:hover {
-    color: #f0c9a4;
+    color: var(--accent-light);
     padding-left: 6px;
   }
 
@@ -435,8 +436,9 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
     display: flex;
     align-items: center;
     gap: 12px;
+    font-family: var(--label);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
   }
 
@@ -449,7 +451,7 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
   }
 
   .scene__needle {
-    stroke: var(--accent);
+    stroke: var(--accent-light);
     stroke-width: 2;
     stroke-linecap: round;
     transform-origin: 20px 20px;
@@ -499,11 +501,13 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
     margin-bottom: 28px;
     padding: 8px 16px 8px 12px;
     border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 999px;
-    background: rgba(18, 18, 15, 0.35);
+    background: rgba(11, 13, 15, 0.35);
     color: #fff;
-    font-size: 13px;
-    font-weight: 600;
+    font-family: var(--label);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
     backdrop-filter: blur(6px);
     transition: background 0.2s, color 0.2s;
   }
@@ -539,7 +543,7 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
 
   .scene__loc-nav .icon-btn {
     color: #fff;
-    background: rgba(18, 18, 15, 0.35);
+    background: rgba(11, 13, 15, 0.35);
     backdrop-filter: blur(6px);
   }
 
@@ -577,11 +581,11 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
     width: 34px;
     height: 34px;
     margin: -17px 0 0 -17px;
-    border-radius: 50%;
-    background: rgba(18, 18, 15, 0.5);
+    background: rgba(11, 13, 15, 0.55);
     border: 1.5px solid #fff;
+    font-family: var(--label);
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 500;
     backdrop-filter: blur(4px);
     transition: background 0.2s, color 0.2s, transform 0.3s var(--ease);
   }
@@ -590,7 +594,6 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
     content: '';
     position: absolute;
     inset: -1.5px;
-    border-radius: 50%;
     border: 1.5px solid #fff;
     animation: spot-ping 2.4s var(--ease) infinite;
   }
@@ -608,12 +611,10 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
 
   .spot__label {
     margin-top: -17px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: rgba(18, 18, 15, 0.55);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    padding: 5px 10px;
+    background: rgba(11, 13, 15, 0.62);
+    font-size: 13px;
+    font-weight: 500;
     white-space: nowrap;
     backdrop-filter: blur(4px);
   }
@@ -628,9 +629,9 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
 
   .spot:hover .spot__dot,
   .spot:focus-visible .spot__dot {
-    background: #fff;
-    color: var(--ink);
-    transform: scale(1.1);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
   }
 
   @media (max-width: 760px) {

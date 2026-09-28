@@ -96,7 +96,7 @@ const counts = Object.fromEntries(order.map((s) => [s, units.filter((u) => u.sta
     position: relative;
     min-width: 560px;
     background: var(--paper);
-    box-shadow: 0 1px 0 var(--rule), 0 30px 60px -40px rgba(29, 27, 23, 0.4);
+    box-shadow: 0 0 0 1px var(--rule);
   }
 
   .units__frame img {
@@ -186,7 +186,7 @@ const counts = Object.fromEntries(order.map((s) => [s, units.filter((u) => u.sta
 
   .units__label {
     flex: 1;
-    font-weight: 600;
+    font-weight: 400;
   }
 
   .units__count {
@@ -199,7 +199,6 @@ const counts = Object.fromEntries(order.map((s) => [s, units.filter((u) => u.sta
     display: flex;
     height: 6px;
     margin-top: 20px;
-    border-radius: 3px;
     overflow: hidden;
     gap: 2px;
   }

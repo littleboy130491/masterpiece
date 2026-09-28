@@ -1,28 +1,28 @@
-@import '@fontsource-variable/manrope';
-@import '@fontsource/instrument-serif/400.css';
-@import '@fontsource/instrument-serif/400-italic.css';
+@import '@fontsource-variable/jost';
 
 :root {
-  --paper: #efe9df;
-  --paper-2: #e6dfd2;
-  --card: #f8f5ef;
-  --ink: #1d1b17;
-  --ink-2: #4a463f;
-  --muted: #7d766b;
-  --rule: #cfc6b7;
-  --room: #12120f; /* dark "viewing room" bands for turntables */
-  --room-2: #1b1a16;
-  --room-ink: #ece6da;
-  --room-muted: #8f887b;
-  --accent: #b4662f; /* timber / terracotta from the facade renders */
-  --accent-ink: #8a4a1f;
+  --paper: #f3f4f2; /* cool concrete */
+  --paper-2: #e6e8e5;
+  --card: #fbfbfa;
+  --ink: #0e1113;
+  --ink-2: #3c4247;
+  --muted: #7a8188;
+  --rule: #d2d5d3;
+  --room: #0b0d0f; /* dark bands for full-screen scenes */
+  --room-2: #14171a;
+  --room-ink: #eef0f1;
+  --room-muted: #8a9199;
+  --accent: #34425e; /* deep slate navy */
+  --accent-ink: #232e44;
+  --accent-light: #bcc5d6; /* pale steel, accent on dark */
 
-  --sold: #d4432c;
-  --reserved: #e8b424;
-  --available: #3f9b57;
+  --sold: #e0442e;
+  --reserved: #f0b400;
+  --available: #1f9a57;
 
-  --serif: 'Instrument Serif', 'Times New Roman', serif;
-  --sans: 'Manrope Variable', 'Helvetica Neue', Arial, sans-serif;
+  --display: 'Jost Variable', 'Futura', 'Century Gothic', sans-serif;
+  --sans: 'Jost Variable', 'Futura', 'Century Gothic', sans-serif;
+  --label: var(--sans); /* small tracked uppercase: nav, buttons, specs */
 
   --gutter: clamp(16px, 4vw, 56px);
   --max: 1440px;
@@ -60,7 +60,8 @@ body {
   color: var(--ink);
   font-family: var(--sans);
   font-size: 16px;
-  line-height: 1.6;
+  font-weight: 380;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -108,17 +109,18 @@ button {
 /* ---------------------------------------------------------------- type */
 
 .eyebrow {
+  font-family: var(--label);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
 .display {
-  font-family: var(--serif);
-  font-weight: 400;
-  line-height: 0.98;
-  letter-spacing: -0.01em;
+  font-family: var(--display);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 /* Section header styled like a drawing-sheet title block. */
@@ -132,12 +134,14 @@ button {
 
 .sheet__title {
   margin: 0;
-  font-size: clamp(48px, 8vw, 112px);
+  font-size: clamp(44px, 7vw, 104px);
 }
 
 .sheet__intro {
   margin: 0;
-  max-width: 44ch;
+  max-width: 40ch;
+  padding-top: 14px;
+  border-top: 2px solid var(--accent);
   color: var(--ink-2);
   justify-self: end;
 }
@@ -169,11 +173,12 @@ button {
   min-height: 44px;
   padding: 10px 20px;
   border: 1px solid currentColor;
-  border-radius: 999px;
+  border-radius: 0;
   background: transparent;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-family: var(--label);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   text-decoration: none;
   transition: background 0.25s var(--ease), color 0.25s var(--ease), border-color 0.25s var(--ease);
@@ -217,7 +222,7 @@ button {
   width: 44px;
   height: 44px;
   border: 1px solid currentColor;
-  border-radius: 50%;
+  border-radius: 0;
   background: transparent;
   transition: background 0.2s var(--ease), color 0.2s var(--ease);
 }
@@ -231,12 +236,13 @@ button {
 .badge {
   display: inline-block;
   padding: 3px 8px;
-  border-radius: 3px;
-  background: repeating-linear-gradient(-45deg, #f3d9a4 0 6px, #efd092 6px 12px);
-  color: #5c3a0c;
+  border-radius: 0;
+  background: repeating-linear-gradient(-45deg, #ffe45c 0 6px, #f5d63a 6px 12px);
+  color: #1a1a0a;
+  font-family: var(--label);
   font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  font-weight: 500;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   line-height: 1.5;
 }
@@ -245,7 +251,7 @@ button {
 
 [data-reveal] {
   opacity: 0;
-  transform: translateY(28px);
+  transform: translateY(20px);
   transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
 }
 

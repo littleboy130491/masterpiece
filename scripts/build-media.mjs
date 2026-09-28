@@ -230,7 +230,7 @@ async function buildStills() {
 
 // ---------------------------------------------------------------------------
 // Drawn placeholders (SVG). Replace with the client's map, siteplan and denah.
-const PAPER = '#efe9df', LINE = '#2b2925', MUTED = '#b9b0a2', WATER = '#9fb8bf', GREEN = '#bfc9a8';
+const PAPER = '#f3f4f2', LINE = '#1b1f23', MUTED = '#c3c7c9', WATER = '#b3c6d3', GREEN = '#cdd6c6', ACCENT = '#34425e';
 
 function areaMapSvg() {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" font-family="Helvetica, Arial, sans-serif">
@@ -249,16 +249,16 @@ function areaMapSvg() {
     <path d="M200 900 C260 700 380 520 520 420 S760 330 900 330 1300 360 1620 420" stroke-width="12"/>
     <path d="M1350 -20 C1320 200 1300 300 1320 440" stroke-width="10"/>
   </g>
-  <g fill="#d9d1c4">
-    ${Array.from({ length: 9 }, (_, i) => `<rect x="${1060 + (i % 3) * 110}" y="${190 + Math.floor(i / 3) * 70}" width="90" height="48" rx="4"/>`).join('')}
-    ${Array.from({ length: 6 }, (_, i) => `<rect x="${130 + (i % 3) * 110}" y="${320 + Math.floor(i / 3) * 70}" width="90" height="48" rx="4"/>`).join('')}
+  <g fill="#dfe2e0">
+    ${Array.from({ length: 9 }, (_, i) => `<rect x="${1060 + (i % 3) * 110}" y="${190 + Math.floor(i / 3) * 70}" width="90" height="48"/>`).join('')}
+    ${Array.from({ length: 6 }, (_, i) => `<rect x="${130 + (i % 3) * 110}" y="${320 + Math.floor(i / 3) * 70}" width="90" height="48"/>`).join('')}
   </g>
-  <path d="M600 330 L940 330 L960 520 L590 540Z" fill="#c9793f" fill-opacity=".18" stroke="#c9793f" stroke-width="4" stroke-dasharray="14 10"/>
+  <path d="M600 330 L940 330 L960 520 L590 540Z" fill="${ACCENT}" fill-opacity=".08" stroke="${ACCENT}" stroke-width="4" stroke-dasharray="14 10"/>
   <g font-size="22" fill="${LINE}" letter-spacing="3">
-    <text x="775" y="440" text-anchor="middle" font-size="26" font-weight="700" fill="#8a4a1f">LOKASI PROYEK</text>
+    <text x="775" y="440" text-anchor="middle" font-size="26" font-weight="700" fill="${ACCENT}">LOKASI PROYEK</text>
     <text x="300" y="205" transform="rotate(-6 300 205)">JALAN TOL</text>
-    <text x="1180" y="455" text-anchor="middle" fill="#6d675e">JALAN UTAMA</text>
-    <text x="760" y="620" text-anchor="middle" fill="#4d6a72">DANAU</text>
+    <text x="1180" y="455" text-anchor="middle" fill="#646b72">JALAN UTAMA</text>
+    <text x="760" y="620" text-anchor="middle" fill="#4f6878">DANAU</text>
   </g>
   <g transform="translate(1500 800)" fill="${LINE}">
     <path d="M0 -44 L14 0 L0 -10 L-14 0Z"/><text y="28" text-anchor="middle" font-size="20" font-weight="700">U</text>
@@ -272,7 +272,7 @@ function siteplanSvg() {
     .map((b) => {
       const units = Array.from({ length: b.units }, (_, i) => {
         const w = b.w / b.units;
-        return `<rect x="${(b.x + i * w).toFixed(1)}" y="${b.y}" width="${w.toFixed(1)}" height="${b.h}" fill="#f8f5ef" stroke="${LINE}" stroke-width="1.5"/>`;
+        return `<rect x="${(b.x + i * w).toFixed(1)}" y="${b.y}" width="${w.toFixed(1)}" height="${b.h}" fill="#fbfbfa" stroke="${LINE}" stroke-width="1.5"/>`;
       }).join('');
       return `<g>${units}<text x="${b.x + b.w / 2}" y="${b.labelY}" text-anchor="middle" font-size="18" font-weight="700" letter-spacing="3" fill="${LINE}">BLOK ${b.id}</text></g>`;
     })
@@ -280,12 +280,12 @@ function siteplanSvg() {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" font-family="Helvetica, Arial, sans-serif">
   <rect width="${width}" height="${height}" fill="${PAPER}"/>
   <path d="M0 ${height - 150} C300 ${height - 200} 600 ${height - 110} 900 ${height - 140} S1400 ${height - 190} ${width} ${height - 130} V${height} H0Z" fill="${WATER}"/>
-  <rect x="0" y="${road.y1}" width="${width}" height="${road.h}" fill="#ddd5c8"/>
-  <rect x="0" y="${road.y2}" width="${width}" height="${road.h}" fill="#ddd5c8"/>
-  <rect x="${road.x}" y="${road.y1}" width="${road.w}" height="${road.y2 - road.y1 + road.h}" fill="#ddd5c8"/>
+  <rect x="0" y="${road.y1}" width="${width}" height="${road.h}" fill="#e1e4e2"/>
+  <rect x="0" y="${road.y2}" width="${width}" height="${road.h}" fill="#e1e4e2"/>
+  <rect x="${road.x}" y="${road.y1}" width="${road.w}" height="${road.y2 - road.y1 + road.h}" fill="#e1e4e2"/>
   <circle cx="${road.x + road.w / 2}" cy="${(road.y1 + road.y2 + road.h) / 2}" r="34" fill="${GREEN}" stroke="${LINE}" stroke-width="1.5"/>
   ${blockRects}
-  <text x="${width / 2}" y="${height - 60}" text-anchor="middle" font-size="18" letter-spacing="3" fill="#4d6a72">DANAU</text>
+  <text x="${width / 2}" y="${height - 60}" text-anchor="middle" font-size="18" letter-spacing="3" fill="#4f6878">DANAU</text>
 </svg>`;
 }
 
@@ -296,7 +296,7 @@ function denahSvg(title, rooms) {
     <text x="${x + w / 2}" y="${y + h / 2 + 7}" text-anchor="middle" font-size="20" fill="${LINE}">${label}</text>`)
     .join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800" font-family="Helvetica, Arial, sans-serif">
-  <rect width="600" height="800" fill="#fbf9f5"/>
+  <rect width="600" height="800" fill="#fbfbfa"/>
   <rect x="60" y="80" width="480" height="620" fill="none" stroke="${LINE}" stroke-width="10"/>
   ${cells}
   <text x="300" y="50" text-anchor="middle" font-size="24" font-weight="700" letter-spacing="4" fill="${LINE}">${title}</text>
@@ -318,7 +318,7 @@ async function buildGraphics() {
   const dir = 'public/wr360/graphics';
   await mkdir(dir, { recursive: true });
   await writeFile(`${dir}/dr-spot.svg`, `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">
-  <circle cx="18" cy="18" r="16" fill="#14130f" fill-opacity=".45" stroke="#fff" stroke-width="2"/>
+  <circle cx="18" cy="18" r="16" fill="#0b0d0f" fill-opacity=".5" stroke="#fff" stroke-width="2"/>
   <path d="M18 11v14M11 18h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
 </svg>`);
 }
