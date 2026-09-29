@@ -8,7 +8,7 @@ import TypeGrid from '../components/home/TypeGrid.astro';
 import Facilities from '../components/home/Facilities.astro';
 import UnitUpdate from '../components/home/UnitUpdate.astro';
 import { area, areaMap, cluster } from '../data/area.js';
-import { labels, site, url } from '../data/site.js';
+import { site, url } from '../data/site.js';
 ---
 
 <Base>
@@ -20,7 +20,6 @@ import { labels, site, url } from '../data/site.js';
       id="kawasan"
       title={area.title}
       intro={area.intro}
-      backLabel={area.backLabel}
       scene={area.scene}
       hotspots={area.hotspots}
       hero={site.hero}
@@ -38,7 +37,7 @@ import { labels, site, url } from '../data/site.js';
             height={areaMap.height}
             loading="lazy"
           />
-          {site.showPlaceholderBadges && areaMap.placeholder && <span class="badge map__badge">{labels.badges.map}</span>}
+          {site.showPlaceholderBadges && areaMap.placeholder && <span class="badge map__badge">Peta contoh</span>}
         </figure>
       </div>
     </section>
@@ -48,7 +47,6 @@ import { labels, site, url } from '../data/site.js';
       id="cluster"
       title={cluster.title}
       intro={cluster.intro}
-      backLabel={cluster.backLabel}
       scene={cluster.scene}
       hotspots={cluster.hotspots}
     />

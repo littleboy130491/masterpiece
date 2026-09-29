@@ -1,10 +1,18 @@
 ---
 // Unit update: siteplan image with a status dot per unit (red sold, yellow
 // reserved, green available). Status display only; dots do not open units.
-// Dot positions are percentages of the siteplan image (CMS: Units).
+// Dot positions are percentages of the siteplan image (src/data/units.json).
 import SheetHeader from '../SheetHeader.astro';
-import { siteplan, units, unitsSection } from '../../data/units.js';
-import { labels, site, statusLabels, url } from '../../data/site.js';
+import units from '../../data/units.json';
+import { site, statusLabels, url } from '../../data/site.js';
+
+const siteplan = {
+  // PLACEHOLDER: drawn stand-in until the client supplies the siteplan.
+  image: '/media/placeholder/siteplan.svg',
+  width: 1600,
+  height: 1000,
+  placeholder: true,
+};
 
 const order = ['available', 'reserved', 'sold'];
 const counts = Object.fromEntries(order.map((s) => [s, units.filter((u) => u.status === s).length]));
@@ -12,13 +20,17 @@ const counts = Object.fromEntries(order.map((s) => [s, units.filter((u) => u.sta
 
 <section id="unit-update" class="units" aria-labelledby="unit-title">
   <div class="wrap">
-    <SheetHeader id="unit-title" title={unitsSection.title} intro={unitsSection.intro} />
+    <SheetHeader
+      id="unit-title"
+      title="Status unit"
+      intro="Status terbaru setiap unit di siteplan."
+    />
 
     <div class="units__layout">
       <div class="units__plan" data-reveal>
         <div class="units__frame" style={`aspect-ratio: ${siteplan.width} / ${siteplan.height}`}>
-          <img src={url(siteplan.image)} alt={siteplan.alt} loading="lazy" />
-          <ul class="units__dots" aria-label={labels.units.siteplanLabel}>
+          <img src={url(siteplan.image)} alt="Siteplan cluster" loading="lazy" />
+          <ul class="units__dots" aria-label="Status unit">
             {
               units.map((u) => (
                 <li
@@ -33,7 +45,7 @@ const counts = Object.fromEntries(order.map((s) => [s, units.filter((u) => u.sta
               ))
             }
           </ul>
-          {site.showPlaceholderBadges && siteplan.placeholder && <span class="badge units__badge">{labels.badges.siteplan}</span>}
+          {site.showPlaceholderBadges && siteplan.placeholder && <span class="badge units__badge">Siteplan contoh</span>}
         </div>
       </div>
 

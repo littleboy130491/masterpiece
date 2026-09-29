@@ -19,7 +19,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { siteplanLayout } from '../src/data/siteplan-layout.js';
+import { siteplanLayout, unitDots } from '../src/data/siteplan-layout.js';
 
 const FORCE = process.argv.includes('--force');
 const OUT = 'public/media';
@@ -323,13 +323,27 @@ async function buildGraphics() {
 </svg>`);
 }
 
+// Seed the unit status list once. After that it is edited by hand (or by whoever
+// the client names to keep sold / reserved / available current).
+async function seedUnits() {
+  const file = 'src/data/units.json';
+  if (existsSync(file)) return;
+  let seed = 7;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const units = unitDots().map((u) => {
+    const r = rand();
+    return { ...u, status: r < 0.34 ? 'sold' : r < 0.5 ? 'reserved' : 'available' };
+  });
+  await writeFile(file, JSON.stringify(units, null, 2) + '\n');
+  console.log(`seeded ${file}`);
+}
+
+await seedUnits();
 await buildGraphics();
 {
-  // Detail frames: every scene frame that has an x4 upscale. Those are the hotspots'
-  // default angles (Homepage → Kawasan/Cluster → hotspots → Default frame in the CMS).
-  const detailFrames = Array.from({ length: KAWASAN.count / SCROLL.step }, (_, f) => f).filter((f) =>
-    existsSync(src(KAWASAN_X4, f * SCROLL.step)),
-  );
+  // Detail frames = every hotspot's default angle (Kawasan and Cluster share these frames).
+  const { area, cluster } = await import('../src/data/area.js');
+  const detailFrames = [area, cluster].flatMap((a) => Object.values(a.hotspots).map((h) => h.frame)).filter((f) => f != null);
   await buildScrollScene('kawasan', KAWASAN, {
     tracks: tracks.points,
     video: HERO_VIDEO,
@@ -338,7 +352,7 @@ await buildGraphics();
   });
 }
 // Cluster: no sequence yet; the cluster scene reuses the kawasan frames
-// (CMS: the Cluster scene package points at /media/scroll/kawasan/). When the cluster renders arrive:
+// (src/data/area.js). When the cluster renders arrive:
 //   await buildScrollScene('cluster', CLUSTER, { tracks: clusterTracks });
 await buildFacade();
 await buildHero();

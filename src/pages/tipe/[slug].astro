@@ -10,9 +10,8 @@ import Base from '../../layouts/Base.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import Turntable from '../../components/Turntable.astro';
-import TypeActions from '../../components/type/TypeActions.astro';
 import { types } from '../../data/types.js';
-import { fmt, labels, site, url } from '../../data/site.js';
+import { site, url } from '../../data/site.js';
 
 export function getStaticPaths() {
   return types.map((t) => ({ params: { slug: t.slug }, props: { t } }));
@@ -24,38 +23,26 @@ const { parts } = t;
 const denahIndex = (label) => t.denah.findIndex((d) => d.label === label);
 const pad = (i) => String(i + 1).padStart(2, '0');
 
-const tp = labels.typePage;
-const { specs } = labels;
-const vars = { name: t.name };
-
 const galleryPayload = JSON.stringify({
-  title: fmt(tp.galleryTitle, vars),
-  items: t.gallery.map((g) => ({ src: url(g.src), alt: g.alt })),
+  title: `${t.name} — Galeri`,
+  items: t.gallery.map((src, i) => ({ src: url(src), alt: `${t.name}, gambar ${i + 1}` })),
 });
-const denahItems = t.denah.map((d) => ({ src: url(d.image), caption: d.label, alt: d.alt }));
-const denahPayload = (index) => JSON.stringify({ title: fmt(tp.floorPlanTitle, vars), items: denahItems, index });
-const vrPayload = t.vr.url && JSON.stringify({ src: url(t.vr.url), title: fmt(tp.vrTitle, vars) });
-const vrTab = t.vr.mode === 'newTab';
-const hasActions = t.gallery.length > 0 || Boolean(t.vr.url);
-const actions = { galleryPayload, hasGallery: t.gallery.length > 0, vrUrl: t.vr.url, vrPayload, vrTab };
+const denahItems = t.denah.map((d) => ({ src: url(d.image), caption: d.label, alt: `Denah ${d.label}` }));
+const denahPayload = (index) => JSON.stringify({ title: `${t.name} — Denah`, items: denahItems, index });
+const vrPayload = JSON.stringify({ src: url(t.vr.url), title: `${t.name} — Tur VR` });
 const facts = [
-  [specs.factLandArea, `${t.lt} ${specs.areaUnit}`],
-  [specs.factBuildingArea, `${t.lb} ${specs.areaUnit}`],
-  [specs.factBedrooms, t.bedrooms],
-  [specs.factBathrooms, t.bathrooms],
+  ['LT', `${t.lt} m²`],
+  ['LB', `${t.lb} m²`],
+  ['KT', t.bedrooms],
+  ['KM', t.bathrooms],
 ];
 ---
 
-<Base
-  title={t.name}
-  fullTitle={t.seo.title}
-  description={t.seo.description || fmt(tp.defaultDescription, vars)}
-  bodyClass="is-type"
->
+<Base title={t.name} description={`${t.name}: fasad dan setiap lantai dalam 360°, denah, galeri, dan tur VR.`} bodyClass="is-type">
   <Header variant="type" />
 
   <main class="tp wrap">
-    <div class="tp__track" data-parts={JSON.stringify(parts.map(({ name, text, frame }) => ({ name, text, frame })))} style={`--parts: ${parts.length}`}>
+    <div class="tp__track" data-parts={JSON.stringify(parts.map(({ name, kind, text, frame }) => ({ name, kind, text, frame })))} style={`--parts: ${parts.length}`}>
       {parts.map((p, i) => <span class="tp__step" id={p.id} data-part-step={i} style={`--i: ${i}`} aria-hidden="true" />)}
 
       <section class="viewer" aria-labelledby="part-title" style={`--ratio: ${t.sequence.width / t.sequence.height}`}>
@@ -63,7 +50,7 @@ const facts = [
           <div>
             <h2 class="display viewer__title" id="part-title" data-part-name>{parts[0].name}</h2>
           </div>
-          <nav class="viewer__dots" aria-label={tp.partsLabel}>
+          <nav class="viewer__dots" aria-label="Bagian">
             {
               parts.map((p, i) => (
                 <a href={`#${p.id}`} class:list={{ 'is-active': i === 0 }} data-part-dot aria-label={p.name} />
@@ -73,7 +60,7 @@ const facts = [
         </div>
 
         <div class="viewer__stage">
-          <Turntable id={`tt-${t.slug}`} label={fmt(tp.viewerLabel, vars)} turntable={t.sequence} tone="black" />
+          <Turntable id={`tt-${t.slug}`} label={`${t.name}, fasad dan lantai`} turntable={t.sequence} tone="black" />
         </div>
 
         <div class="viewer__info">
@@ -85,7 +72,7 @@ const facts = [
                 d >= 0 && (
                   <button class="viewer__denah" type="button" data-part-denah={i} data-open="gallery" data-payload={denahPayload(d)} hidden={i !== 0}>
                     <img src={url(t.denah[d].image)} alt="" loading="lazy" />
-                    <span>{fmt(tp.floorPlanCaption, { label: t.denah[d].label })}</span>
+                    <span>Denah {t.denah[d].label}</span>
                   </button>
                 )
               );
@@ -95,7 +82,7 @@ const facts = [
       </section>
     </div>
 
-    <aside class="tp__panel" aria-label={fmt(tp.infoLabel, vars)}>
+    <aside class="tp__panel" aria-label={`Informasi ${t.name}`}>
       <div class="panel">
         <h1 class="display panel__name">{t.name}</h1>
         {t.label && <p class="panel__label eyebrow">{t.label}</p>}
@@ -124,7 +111,7 @@ const facts = [
           }
         </dl>
 
-        <nav class="panel__floors" aria-label={tp.partsLabel}>
+        <nav class="panel__floors" aria-label="Bagian">
           {
             parts.map((p, i) => (
               <a href={`#${p.id}`} data-part-link={i} class:list={{ 'is-active': i === 0 }}>
@@ -135,41 +122,37 @@ const facts = [
           }
         </nav>
 
-        {t.denah.length > 0 && (
-          <div class="panel__denah">
-            <ul aria-label={tp.floorPlansLabel}>
-              {
-                t.denah.map((d, i) => (
-                  <li>
-                    <button type="button" data-open="gallery" data-payload={denahPayload(i)} aria-label={fmt(tp.openFloorPlan, { label: d.label })}>
-                      <img src={url(d.image)} alt="" loading="lazy" />
-                      <span>{d.label}</span>
-                    </button>
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
-        )}
+        <div class="panel__denah">
+          <ul aria-label="Denah">
+            {
+              t.denah.map((d, i) => (
+                <li>
+                  <button type="button" data-open="gallery" data-payload={denahPayload(i)} aria-label={`Buka denah ${d.label}`}>
+                    <img src={url(d.image)} alt="" loading="lazy" />
+                    <span>{d.label}</span>
+                  </button>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
 
-        {
-          hasActions && (
-            <div class="panel__actions">
-              <TypeActions {...actions} />
-            </div>
-          )
-        }
+        <div class="panel__actions">
+          <button class="btn" type="button" data-open="gallery" data-payload={galleryPayload}>Gallery</button>
+          <button class="btn btn--solid" type="button" data-open="iframe" data-payload={vrPayload}>VR</button>
+        </div>
       </div>
     </aside>
   </main>
 
   <!-- Narrow screens: facts, Gallery and VR stay reachable while scrolling. -->
-  <div class="dock" aria-label={fmt(tp.dockLabel, vars)}>
+  <div class="dock" aria-label={`${t.name} ringkas`}>
     <div class="dock__info">
       <strong class="display">{t.name}</strong>
       <span>{facts.map(([k, v]) => `${k} ${v}`).join(' · ')}</span>
     </div>
-    <TypeActions {...actions} />
+    <button class="btn" type="button" data-open="gallery" data-payload={galleryPayload}>Gallery</button>
+    <button class="btn btn--solid" type="button" data-open="iframe" data-payload={vrPayload}>VR</button>
   </div>
 
   <Footer />
@@ -479,8 +462,7 @@ const facts = [
     position: sticky;
     bottom: 0;
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
     margin-top: 24px;
     padding-block: 14px 20px;
@@ -488,11 +470,11 @@ const facts = [
     box-shadow: 0 -1px 0 var(--rule), 0 -16px 16px -8px var(--paper);
   }
 
-  .panel__actions :global(.btn:not(.btn--solid):not(:hover)) {
+  .panel__actions .btn:not(.btn--solid):not(:hover) {
     background: var(--paper);
   }
 
-  .panel__actions :global(.btn) {
+  .panel__actions .btn {
     justify-content: center;
   }
 
@@ -575,7 +557,7 @@ const facts = [
       text-overflow: ellipsis;
     }
 
-    .dock :global(.btn) {
+    .dock .btn {
       min-height: 40px;
       padding: 8px 14px;
       font-size: 12px;

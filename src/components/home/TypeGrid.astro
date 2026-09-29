@@ -1,15 +1,17 @@
 ---
 // Unit types: 3 cards per row, at most 2 rows. Each card links to /tipe/<slug>/.
 import SheetHeader from '../SheetHeader.astro';
-import { types, typesSection } from '../../data/types.js';
-import { labels, site, url } from '../../data/site.js';
-
-const { specs } = labels;
+import { types } from '../../data/types.js';
+import { site, url } from '../../data/site.js';
 ---
 
 <section id="tipe" class="types" aria-labelledby="tipe-title">
   <div class="wrap">
-    <SheetHeader id="tipe-title" title={typesSection.title} intro={typesSection.intro} />
+    <SheetHeader
+      id="tipe-title"
+      title="Pilih tipe"
+      intro="Bandingkan luas tanah, luas bangunan, dan jumlah kamar. Buka satu tipe untuk menjelajahi fasad dan setiap lantainya."
+    />
 
     <ul class="types__grid">
       {
@@ -17,21 +19,21 @@ const { specs } = labels;
           <li data-reveal style={`transition-delay: ${(i % 3) * 90}ms`}>
             <a class="card" href={url(`/tipe/${t.slug}/`)}>
               <div class="card__img">
-                <img src={url(t.image)} alt={t.imageAlt || `${t.name}${t.label ? `, ${t.label}` : ''}`} loading="lazy" />
+                <img src={url(t.image)} alt={`${t.name}${t.label ? `, ${t.label}` : ''}`} loading="lazy" />
                 <span class="card__open" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 17L17 7M9 7h8v8" /></svg>
                 </span>
-                {site.showPlaceholderBadges && t.placeholder && <span class="badge card__badge">{labels.badges.data}</span>}
+                {site.showPlaceholderBadges && t.placeholder && <span class="badge card__badge">Data contoh</span>}
               </div>
               <div class="card__head">
                 <h3 class="card__name display">{t.name}</h3>
                 {t.label && <span class="card__label eyebrow">{t.label}</span>}
               </div>
               <dl class="card__specs">
-                <div><dt>{specs.cardLandArea}</dt><dd>{t.lt} {specs.areaUnit}</dd></div>
-                <div><dt>{specs.cardBuildingArea}</dt><dd>{t.lb} {specs.areaUnit}</dd></div>
-                <div><dt>{specs.cardBedrooms}</dt><dd>{t.bedrooms}</dd></div>
-                <div><dt>{specs.cardBathrooms}</dt><dd>{t.bathrooms}</dd></div>
+                <div><dt>LT</dt><dd>{t.lt} m²</dd></div>
+                <div><dt>LB</dt><dd>{t.lb} m²</dd></div>
+                <div><dt>K. tidur</dt><dd>{t.bedrooms}</dd></div>
+                <div><dt>K. mandi</dt><dd>{t.bathrooms}</dd></div>
               </dl>
             </a>
           </li>

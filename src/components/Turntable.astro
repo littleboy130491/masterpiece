@@ -6,7 +6,7 @@
 // `hotspots` (cluster only) maps WebRotate hotspot ids to the content of
 // the info panel. The list under the viewer opens the same panels, so hotspots are
 // reachable by keyboard and screen readers too.
-import { fmt, labels, site, url } from '../data/site.js';
+import { site, url } from '../data/site.js';
 
 interface Hotspot {
   title: string;
@@ -51,17 +51,19 @@ const pkg = url(turntable.package);
       id={id}
       tabindex="0"
       role="application"
-      aria-roledescription={labels.turntable.roleDescription}
-      aria-label={fmt(labels.turntable.viewerHint, { label })}
+      aria-roledescription="360° viewer"
+      aria-label={`${label}, tampilan 360°. Gunakan panah kiri dan kanan untuk memutar.`}
     >
     </div>
     <div class="tt__loading" aria-hidden="true"><span></span></div>
-    <p class="tt__locked">{labels.turntable.licenseNotice}</p>
-    {site.showPlaceholderBadges && turntable.placeholder && <span class="badge tt__badge">{labels.badges.sequence}</span>}
+    <p class="tt__locked">
+      Tampilan 360° ini aktif setelah lisensi WebRotate 360 PRO dipasang. Versi gratis hanya memuat satu viewer per halaman.
+    </p>
+    {site.showPlaceholderBadges && turntable.placeholder && <span class="badge tt__badge">Sekuens contoh</span>}
   </div>
 
   <div class="tt__hud">
-    <button class="icon-btn tt__step" type="button" data-step="-1" aria-label={labels.turntable.rotateLeft} aria-controls={id}>
+    <button class="icon-btn tt__step" type="button" data-step="-1" aria-label="Putar ke kiri" aria-controls={id}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 5l-7 7 7 7"></path></svg>
     </button>
     <div class="tt__dial" aria-hidden="true">
@@ -69,7 +71,7 @@ const pkg = url(turntable.package);
       <span class="tt__deg">0°</span>
     </div>
     <span class="tt__spacer" aria-hidden="true"></span>
-    <button class="icon-btn tt__step" type="button" data-step="1" aria-label={labels.turntable.rotateRight} aria-controls={id}>
+    <button class="icon-btn tt__step" type="button" data-step="1" aria-label="Putar ke kanan" aria-controls={id}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 5l7 7-7 7"></path></svg>
     </button>
   </div>

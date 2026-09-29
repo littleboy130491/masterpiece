@@ -6,22 +6,6 @@ is a mapping exercise rather than a redesign.
 
 The site stays static (Astro). The CMS stores content; a publish triggers a rebuild (webhook → build → deploy).
 
-> **Implemented in Payload 3** (`cms/`, see [`cms/README.md`](../cms/README.md)). How the models below map to it:
->
-> | Model | Payload |
-> |---|---|
-> | Site settings (§4) | Global `site-settings` (plus favicon, a light logo for over the hero, and colours) |
-> | Homepage (§5) + Hotspots (§6) | Global `homepage`, one tab per section; hotspots are an array per scene |
-> | Labels hard-coded in components (§12) | Global `labels` ("Interface text"): every button, badge, 404 text and screen-reader label |
-> | Facility (§7), Unit type (§8), Unit (§9) | Collections `facilities`, `unit-types`, `units` (CSV import/export on units) |
-> | Media packages (§10.1, §10.2) | Collection `packages` ("Motion packages"): a folder path plus frames, size and landmarks |
-> | Images and videos | Collection `media`, alt text required |
->
-> Differences from the plan: the five spec rows on a type page come from the spec numbers (as §8.1 suggests) and
-> `infoRows` holds only extras; `part.floorPlan` is a text field validated against the type's floor plan labels;
-> slugs are locked after the first save except for admins. Not built yet: localization (`id` only for now),
-> `hero.loopVideoMobile`, `transitionClip` and clip sets (§10.3), hotspot images, custom picker UIs, and draft preview.
-
 To see where each field appears on the page, see the annotated screenshots in [`CMS-FIELD-MAP.md`](CMS-FIELD-MAP.md).
 
 ## Contents
