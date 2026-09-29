@@ -1,15 +1,15 @@
 ---
 import Base from '../layouts/Base.astro';
 import Header from '../components/Header.astro';
-import { url } from '../data/site.js';
+import { labels, url } from '../data/site.js';
 ---
 
-<Base title="Halaman tidak ditemukan">
+<Base title={labels.notFound.title}>
   <Header variant="type" />
   <main class="nf wrap">
-    <h1 class="display nf__title">Halaman tidak ditemukan</h1>
-    <p class="nf__text">Alamat ini tidak ada atau sudah dipindahkan.</p>
-    <a class="btn btn--solid" href={url('/')}>Kembali ke beranda</a>
+    <h1 class="display nf__title">{labels.notFound.title}</h1>
+    <p class="nf__text">{labels.notFound.text}</p>
+    <a class="btn btn--solid" href={url('/')}>{labels.notFound.button}</a>
   </main>
 </Base>
 

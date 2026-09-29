@@ -2,28 +2,24 @@
 // Facilities carousel (max 10 slides): native horizontal scroll-snap with
 // prev/next buttons, so touch, trackpad and keyboard all work without a library.
 import SheetHeader from '../SheetHeader.astro';
-import { facilities } from '../../data/facilities.js';
-import { site, url } from '../../data/site.js';
+import { facilities, facilitiesSection } from '../../data/facilities.js';
+import { labels, site, url } from '../../data/site.js';
 ---
 
 <section id="fasilitas" class="fac" aria-labelledby="fasilitas-title">
   <div class="wrap">
-    <SheetHeader
-      id="fasilitas-title"
-      title="Ruang bersama"
-      intro="Fasilitas yang melengkapi kawasan, dari tepi danau hingga pusat komersial."
-    />
+    <SheetHeader id="fasilitas-title" title={facilitiesSection.title} intro={facilitiesSection.intro} />
   </div>
 
   <div class="fac__rail" data-carousel>
-    <ul class="fac__track" data-track tabindex="0" aria-label="Galeri fasilitas">
+    <ul class="fac__track" data-track tabindex="0" aria-label={labels.facilities.listLabel}>
       {
-        facilities.map((f, i) => (
+        facilities.map((f) => (
           <li class="fac__slide">
             <figure>
               <div class="fac__img">
-                <img src={url(f.image)} alt={f.title} loading="lazy" />
-                {site.showPlaceholderBadges && i === 0 && <span class="badge fac__badge">Gambar contoh</span>}
+                <img src={url(f.image)} alt={f.alt} loading="lazy" />
+                {site.showPlaceholderBadges && f.placeholder && <span class="badge fac__badge">{labels.badges.image}</span>}
               </div>
               <figcaption>
                 {f.title}
@@ -36,10 +32,10 @@ import { site, url } from '../../data/site.js';
 
     <div class="fac__controls wrap">
       <div class="fac__progress" aria-hidden="true"><span data-progress></span></div>
-      <button class="icon-btn" type="button" data-dir="-1" aria-label="Fasilitas sebelumnya">
+      <button class="icon-btn" type="button" data-dir="-1" aria-label={labels.facilities.prev}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 5l-7 7 7 7"></path></svg>
       </button>
-      <button class="icon-btn" type="button" data-dir="1" aria-label="Fasilitas berikutnya">
+      <button class="icon-btn" type="button" data-dir="1" aria-label={labels.facilities.next}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 5l7 7-7 7"></path></svg>
       </button>
     </div>

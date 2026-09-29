@@ -12,7 +12,7 @@
 // panel. Back, Esc, or scrolling on returns to the orbit.
 //
 // Logic in src/scripts/scroll-scene.js.
-import { site, url } from '../data/site.js';
+import { labels, site, url } from '../data/site.js';
 
 interface Hotspot {
   track: string;
@@ -26,12 +26,21 @@ interface Props {
   id: string;
   title: string;
   intro: string;
+  backLabel: string;
   scene: { base: string; startFrame?: number; placeholder?: boolean };
   hotspots: Record<string, Hotspot>;
-  hero?: { eyebrow: string; title: string; teaser: string; full: string; cover: string };
+  hero?: {
+    eyebrow?: string;
+    title: string;
+    teaser: string;
+    full: string;
+    cover: string;
+    playLabel: string;
+    scrollCue?: string;
+  };
 }
 
-const { id, title, intro, scene, hotspots, hero } = Astro.props;
+const { id, title, intro, backLabel, scene, hotspots, hero } = Astro.props;
 const spots = Object.entries(hotspots).map(([key, h]) => ({
   key,
   short: h.short || h.title,
@@ -82,7 +91,7 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
     {
       site.showPlaceholderBadges && scene.placeholder && (
         <span class="badge scene__badge" data-phase="area">
-          Sekuens contoh
+          {labels.badges.sequence}
         </span>
       )
     }
@@ -91,7 +100,7 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
       hero && (
         <>
           <div class="scene__hero wrap" data-phase="hero">
-            <p class="eyebrow scene__eyebrow">{hero.eyebrow}</p>
+            {hero.eyebrow && <p class="eyebrow scene__eyebrow">{hero.eyebrow}</p>}
             <h1 class="display scene__title">{hero.title}</h1>
             <button class="scene__play" type="button" data-open="video" data-payload={fullPayload}>
               <span class="scene__play-icon" aria-hidden="true">
@@ -99,12 +108,14 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
                   <path d="M8 5.5v13l11-6.5z" fill="currentColor" />
                 </svg>
               </span>
-              <span class="scene__play-label">Play Full Video</span>
+              <span class="scene__play-label">{hero.playLabel}</span>
             </button>
           </div>
-          <p class="scene__cue eyebrow" data-phase="hero" aria-hidden="true">
-            Gulir
-          </p>
+          {hero.scrollCue && (
+            <p class="scene__cue eyebrow" data-phase="hero" aria-hidden="true">
+              {hero.scrollCue}
+            </p>
+          )}
         </>
       )
     }
@@ -132,15 +143,15 @@ const fullPayload = hero && JSON.stringify({ src: url(hero.full), title: site.fu
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
           <path d="M19 12H5M11 6l-6 6 6 6"></path>
         </svg>
-        Kembali ke {title.toLowerCase()}
+        {backLabel}
       </button>
       <h3 class="display scene__loc-title" id={`${id}-loc-title`} tabindex="-1"></h3>
       <p class="scene__loc-text"></p>
       <div class="scene__loc-nav">
-        <button class="icon-btn" type="button" data-loc-step="-1" aria-label="Lokasi sebelumnya">
+        <button class="icon-btn" type="button" data-loc-step="-1" aria-label={labels.scene.prevLocation}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 5l-7 7 7 7"></path></svg>
         </button>
-        <button class="icon-btn" type="button" data-loc-step="1" aria-label="Lokasi berikutnya">
+        <button class="icon-btn" type="button" data-loc-step="1" aria-label={labels.scene.nextLocation}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 5l7 7-7 7"></path></svg>
         </button>
       </div>

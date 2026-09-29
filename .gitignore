@@ -6,3 +6,7 @@ dist/
 public/media/
 
 /dr-site-dist.zip
+
+# Pulled from the CMS by `npm run content` (scripts/pull-content.mjs)
+src/data/content.json
+public/uploads/

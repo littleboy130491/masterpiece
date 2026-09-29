@@ -1,13 +1,25 @@
 # DR Property Website
 
 Marketing site for one development, built from `BRIEF.md` and the client sketch `DR Web Prop.jpg.jpeg`.
-It has one scrolling homepage and one page per unit type. Astro builds it as a static site.
+It has one scrolling homepage and one page per unit type. Astro builds it as a static site; all content
+comes from a [Payload CMS](https://payloadcms.com) in [`cms/`](cms/README.md).
+
+First run:
 
 ```
 npm install
-npm run media      # build web media from assets/ (needs ffmpeg on PATH); skips folders that exist
-npm run dev        # http://localhost:4321
-npm run build      # static output in dist/
+npm run media                  # build web media from assets/ (needs ffmpeg on PATH); skips folders that exist
+(cd cms && npm install && cp .env.example .env)   # then set PAYLOAD_SECRET in cms/.env
+(cd cms && npm run migrate && npm run seed)       # create the database and load the current content
+```
+
+Every day:
+
+```
+npm run cms        # CMS admin at http://localhost:3100/admin (first visit: create the admin account)
+npm run dev        # site at http://localhost:4321; pulls content from the CMS first
+npm run build      # static output in dist/; pulls content first, falls back to the last pull if the CMS is down
+npm run build:strict   # same, but fails if the CMS is down (use for deploys)
 npm run preview
 ```
 
@@ -28,8 +40,8 @@ malinowskiego.com (`src/components/ScrollScene.astro`, `src/scripts/scroll-scene
 orbit over its scroll length (`--range`: 400vh on desktop, 300vh on phones), with hotspot markers pinned to
 landmarks, a list of the same hotspots, and a degree meter.
 
-**Opening a hotspot takes you there along the real camera path.** Each hotspot has a default angle (`frame` in
-`src/data/area.js`: a frame of the orbit where it sits well in view). A camera over the canvas follows the hotspot
+**Opening a hotspot takes you there along the real camera path.** Each hotspot has a default angle (Default frame
+in the CMS, Homepage → Kawasan/Cluster → Hotspots: a frame of the orbit where it sits well in view). A camera over the canvas follows the hotspot
 using its tracked position in every frame (`travel` in `src/scripts/scroll-scene.js`):
 1. Open: the orbit fast-forwards to the hotspot's angle, the shorter way round, while the camera moves in and zooms
    to 2.2× on it. The direction changes during the move because it's the rendered camera path turning, so there
@@ -55,9 +67,9 @@ coarse-to-fine, so scrubbing works immediately and sharpens as the rest arrive. 
 folder share one download. Markers hide wherever they would cover the text.
 
 **The cluster currently reuses the Kawasan frames** (with a "Sekuens contoh" badge). When the cluster renders
-arrive, build them with `buildScrollScene('cluster', …)` in `scripts/build-media.mjs`, then point
-`cluster.scene.base` in `src/data/area.js` at `/media/scroll/cluster/`. Set each cluster hotspot's `track` to a
-landmark in the new manifest.
+arrive, build them with `buildScrollScene('cluster', …)` in `scripts/build-media.mjs`, then in the CMS
+register it under Motion packages (path `/media/scroll/cluster/`; frames and landmarks are read from its manifest),
+pick it on Homepage → Cluster, and set each cluster hotspot's Landmark to one in the new manifest.
 
 These scenes are a canvas image sequence, not WebRotate. The user asked for scroll-scrubbing like the reference,
 and WebRotate can neither drive a full-bleed, cover-fit view (it won't upscale past the frame width) nor follow
@@ -65,17 +77,30 @@ page scroll. As a result the homepage has no WebRotate viewer.
 
 ## Where content lives
 
-Content lives in `src/data/` for now. The planned CMS structure (every editable field, its type and validation, and
-how it maps to these files) is in [`docs/CMS-CONTENT-MODEL.md`](docs/CMS-CONTENT-MODEL.md). Annotated screenshots showing where
-each field appears on the page are in [`docs/CMS-FIELD-MAP.md`](docs/CMS-FIELD-MAP.md).
+Every word, number, image and video on the site is edited in the CMS (`cms/`, Payload 3). How it works, who can
+edit what, and where each part of the page is edited: [`cms/README.md`](cms/README.md). The content model it
+implements, with validation rules, is in [`docs/CMS-CONTENT-MODEL.md`](docs/CMS-CONTENT-MODEL.md); annotated
+screenshots of where each field appears are in [`docs/CMS-FIELD-MAP.md`](docs/CMS-FIELD-MAP.md).
 
-| File | Controls |
+`npm run content` (run automatically before `dev` and `build`) pulls it into the build:
+
+| Output | What |
 | --- | --- |
-| `src/data/site.js` | Project name, hero copy and media, nav, status labels, placeholder badges on/off |
-| `src/data/area.js` | Kawasan and Cluster scroll scenes + hotspot info, area map |
+| `src/data/content.json` | Snapshot of the CMS globals (Site settings, Homepage, Interface text) and Units, gitignored |
+| `public/uploads/` | Every uploaded image and video the content uses, gitignored |
+
+The modules in `src/data/` map that snapshot to the shapes the components use:
+
+| File | Gives the components |
+| --- | --- |
+| `src/data/site.js` | Project name, SEO, favicon, colours, hero, nav, status labels, interface text (`labels`), placeholder badges on/off |
+| `src/data/area.js` | Kawasan and Cluster scroll scenes + hotspots, area map |
 | `src/data/facilities.js` | Carousel slides (capped at 10) |
-| `src/data/types.js` | Types (capped at 6): specs, prop info, the type's sequence and its parts (keyframe + text + denah), denah, gallery, VR URL |
-| `src/data/units.json` | Siteplan dots: `{ id, x, y, status }`, with `x`/`y` in % of the siteplan image and `status` one of `sold` / `reserved` / `available` |
+| `src/data/types.js` | Types (capped at 6): specs, info rows, the type's sequence and its parts (keyframe + text + denah), denah, gallery, VR |
+| `src/data/units.js` | Siteplan image and dots: `{ id, x, y, status }`, with `x`/`y` in % of the siteplan image |
+
+Motion packages (scroll-scene frames, WebRotate folders) stay in `public/media/`, built by `npm run media`; the CMS
+stores which package each scene or type uses, and its frame count.
 
 ### Type page: one sequence, animated between parts
 
@@ -88,7 +113,7 @@ Dragging still rotates freely. Direct links such as `/tipe/tipe-1/#lantai-2` ope
 
 PLACEHOLDER: the only sequence so far is the Ruko Hook facade orbit, so the parts are just evenly spaced angles
 of it. The sequence to ask for should move between the parts itself (the roof lifting off, floors separating, a
-cut-away per floor), with one keyframe per part. Set each part's `frame` to its keyframe in `src/data/types.js`.
+cut-away per floor), with one keyframe per part. Set each part's Frame to its keyframe in the CMS (Unit types → 360° sequence).
 
 ## 360° turntables (WebRotate 360)
 
@@ -106,8 +131,8 @@ give each hotspot `<spotinfo clickAction="11" clickData="drHotspot" … />`. Web
 `window.drHotspot`, which opens the info panel for the entry passed as `hotspots` with the same id.
 
 **Swapping in client packages.** Drop the SpotEditor output into `public/media/<name>/`, set
-`mouseWheelDrag="false"` in its `<control>`, point the entry in `src/data/*.js` at it (with `width`/`height`
-set to the frame size), and delete the matching builder in `scripts/build-media.mjs` so it isn't regenerated.
+`mouseWheelDrag="false"` in its `<control>`, register it in the CMS under Motion packages (its frame count and size are read from `config.xml`) and pick it
+on the Unit type, and delete the matching builder in `scripts/build-media.mjs` so it isn't regenerated.
 
 ### License: needed before launch
 
@@ -150,7 +175,7 @@ buildings as the view rotates. Output goes to `scripts/data/kawasan-tracks.json`
 
 ## Placeholders still in the build
 
-Everything below shows a striped "contoh" badge on the page while `site.showPlaceholderBadges` is on.
+Everything below is marked Placeholder in the CMS and shows a striped "contoh" badge while badges are on (Site settings → Developer).
 
 - **Project name:** "DR" / "DR Residence", taken from the sketch file name.
 - **Hero film:** the aerial render orbit, not a produced film.
@@ -167,10 +192,10 @@ Everything below shows a striped "contoh" badge on the page while `site.showPlac
 
 1. **Hero:** resolved as the short video, flowing into the Kawasan scroll scene (see above).
 2. **Play Full Video:** opens in a full-screen overlay on the page.
-3. **Name and language:** Indonesian UI. All copy lives in `src/data/`.
+3. **Name and language:** Indonesian UI. All copy, including buttons and screen-reader labels, is edited in the CMS.
 4. **Counts:** data-driven. 6 types, one with 3 floors to show floors continuing past 2.
 5. **Denah thumbnails:** open the plans in the lightbox. The part list above them (and the bars in the viewer) move the sequence to each part, and the current part's denah shows under the viewer.
 6. **Gallery:** lightbox overlay.
 7. **VR:** embedded in the overlay, plus a new-tab link.
-8. **Unit status:** a dot list the site renders (`units.json`) on top of a siteplan image.
-9. **Hosting:** static output, deployable anywhere. Set `site`/`base` in `astro.config.mjs` once the domain is known. Also needs the WebRotate license (above).
+8. **Unit status:** a dot list the site renders (CMS: Units, editable by a Sales role, bulk via CSV) on top of a siteplan image.
+9. **Hosting:** the site is static output, deployable anywhere. Set `site`/`base` in `astro.config.mjs` once the domain is known. The CMS needs a Node host that can rebuild and upload the site (see `cms/README.md`, *Deploying*). Also needs the WebRotate license (above).

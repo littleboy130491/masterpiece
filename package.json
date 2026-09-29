@@ -8,7 +8,13 @@
     "track": "node scripts/track-hotspots.mjs",
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "content": "node scripts/pull-content.mjs",
+    "predev": "npm run content",
+    "prebuild": "npm run content",
+    "build:strict": "node scripts/pull-content.mjs --strict && astro build",
+    "cms": "npm --prefix cms run dev",
+    "cms:seed": "npm --prefix cms run seed"
   },
   "dependencies": {
     "@fontsource-variable/jost": "^5.3.0",
